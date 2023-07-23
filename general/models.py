@@ -1,8 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser,BaseUserManager
 from django.db.models.signals import post_save
-from django.dispatch import receiver
 import django.utils.timezone as timezone
+from django.dispatch import receiver
+# from product.models import Product
 
 # Create your models here.
 class User(AbstractUser):
@@ -20,7 +21,7 @@ class User(AbstractUser):
     def save(self, *args, **kwargs):
         if not self.pk:
             self.role = self.base_role
-        return super().save(*args,**kwargs)
+            return super().save(*args,**kwargs)
  
 class NormalManager(BaseUserManager):
     def get_queryset(self,*args,**kwargs):
@@ -80,7 +81,7 @@ class CompanyProfile(models.Model):
     user = models.OneToOneField(User,on_delete=models.CASCADE)
     companyName = models.CharField(max_length=100,null=True,blank=True)
     address = models.CharField(max_length=255,null=True,blank=True)
-    vitNumber = models.CharField(max_length = 8, unique = True, default = "00000000", primary_key=True)
+    vatNumber = models.CharField(max_length = 8, unique = True, default = "00000000", primary_key=True)
     chairman = models.CharField(max_length=50,null=True,blank=True)
 
 class Announcement(models.Model):
@@ -88,3 +89,4 @@ class Announcement(models.Model):
     upload_date = models.DateTimeField(default=timezone.now)
     edit_date = models.DateTimeField(auto_now=True)
     context = models.TextField()
+
