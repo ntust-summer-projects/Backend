@@ -43,7 +43,7 @@ class AbstractLog(models.Model):
         
     
 class LogTManager(models.Manager):
-    def get_queryset(self,*args,**kwargs):
+    def get_queryset(self, *args, **kwargs):
         result = super().get_queryset(*args,**kwargs).filter(logType=AbstractLog.LogType.TRANSPORTATION)
         return result
     def create(self, *args, **kwargs):
