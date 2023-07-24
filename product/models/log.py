@@ -1,7 +1,6 @@
 from django.db import models
 from general.models import User
 from product.models import Transportation, Product
-import django.utils.timezone as timezone
 from auditlog.registry import auditlog
             
 class LogManager(models.Manager):
@@ -26,7 +25,7 @@ class AbstractLog(models.Model):
     logType = models.CharField(max_length=50, choices=LogType.choices,default = LogType.TRANSPORTATION, editable = False)
     carbonEmission = models.FloatField(editable = False, default = 0.0)
     timestamp = models.DateTimeField(
-        default=timezone.now,
+        auto_now = True,
         db_index=True,
     )
     
