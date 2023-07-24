@@ -51,14 +51,14 @@ class Product(models.Model):
     def getLog(self):
         return LogEntry.objects.filter(object_id = self.pk)
     
-class Material_Abstract_Type(models.Model):
+class MaterialAbstractType(models.Model):
     name = models.CharField(max_length = 50)
     
     def __str__(self):
         return self.name
     
-class MaterialType(Material_Abstract_Type):
-    parent = models.ForeignKey(Material_Abstract_Type, on_delete=models.CASCADE, related_name = 'subTypes', blank = True, null = True)
+class MaterialType(MaterialAbstractType):
+    parent = models.ForeignKey(MaterialAbstractType, on_delete=models.CASCADE, related_name = 'subTypes', blank = True, null = True)
     
     unique_together = ['name', 'parent']
     
