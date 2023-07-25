@@ -3,7 +3,7 @@ from product.models import *
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id','name','description','carbonEmission','company')
+    list_display = ('id','name','number','carbonEmission','company', 'last_update')
     
 @admin.register(Component)
 class ComponentAdmin(admin.ModelAdmin):
