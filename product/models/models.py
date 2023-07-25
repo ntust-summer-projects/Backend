@@ -5,7 +5,7 @@ from auditlog.models import LogEntry
 from general.models import Company
 import requests
 import django.utils.timezone as timezone
-from product.models import ProductCategory, MaterialCategory
+from .category import ProductCategory, MaterialCategory
 
 def getComponyName(vatNumber):
     url = f"https://data.gcis.nat.gov.tw/od/data/api/9D17AE0D-09B5-4732-A8F4-81ADED04B679?$format=json&$filter=Business_Accounting_NO eq { vatNumber }&$skip=0&$top=50"
