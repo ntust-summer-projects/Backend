@@ -6,6 +6,8 @@ from general.models import User
 import requests
 import django.utils.timezone as timezone
 from .category import Category
+from django.db.models import Q
+from django.contrib.contenttypes.models import ContentType
 
 def getComponyName(vatNumber):
     url = f"https://data.gcis.nat.gov.tw/od/data/api/9D17AE0D-09B5-4732-A8F4-81ADED04B679?$format=json&$filter=Business_Accounting_NO eq { vatNumber }&$skip=0&$top=50"
@@ -51,7 +53,8 @@ class Product(models.Model):
         #self.getLog()
 
     def getLog(self):
-        return LogEntry.objects.filter(object_id = self.pk)
+        return LogEntry.objects.filter(Q(content_type = ContentType.objects.get_for_model(self), object_id = self.pk) |
+                                       Q(content_type = ContentType.objects.get_for_model(Component), serialized_data__fields__product = self.pk))
 
     
 class Material(models.Model):
