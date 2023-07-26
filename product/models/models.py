@@ -51,7 +51,8 @@ class Product(models.Model):
         #self.getLog()
 
     def getLog(self):
-        return LogEntry.objects.filter(object_id = self.pk)
+        logs = LogEntry.objects.filter(object_id = self.pk)
+        return logs
 
     
 class Material(models.Model):

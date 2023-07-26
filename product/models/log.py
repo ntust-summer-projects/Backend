@@ -1,12 +1,11 @@
 from django.db import models
-from django.db.models.query import QuerySet
 from general.models import User
 from product.models import Transportation, Product
 from auditlog.registry import auditlog
             
 class LogManager(models.Manager):
     def create(*args, **kwargs):
-        t = kwargs.pop('logType',None)
+        t = kwargs.get('logType',None)
         match t:
             case AbstractLog.LogType.TRANSPORTATION:
                 return LogT.objects.create(**kwargs)
@@ -15,17 +14,8 @@ class LogManager(models.Manager):
             case _:
                 raise Exception("LogType not found")
             
-    '''def get_queryset(self,*args,**kwargs):
-        match kwargs.pop('logType',None):
-            case AbstractLog.LogType.TRANSPORTATION:
-                return LogT.objects.get_queryset(*args, **kwargs)
-            case AbstractLog.LogType.ITEM:
-                return LogI.objects.get_queryset(*args, **kwargs)
-            case _:
-                return super().get_queryset(*args, **kwargs)'''
-            
     def all(self, *args, **kwargs):
-        match kwargs.pop('logType',None):
+        match kwargs.get('logType',None):
             case AbstractLog.LogType.TRANSPORTATION:
                 return LogT.objects.all(*args, **kwargs)
             case AbstractLog.LogType.ITEM:
@@ -33,7 +23,7 @@ class LogManager(models.Manager):
             case _:
                 return super().all(*args, **kwargs)
     def filter(self, *args, **kwargs):
-        match kwargs.pop('logType',None):
+        match kwargs.get('logType',None):
             case AbstractLog.LogType.TRANSPORTATION:
                 return LogT.objects.filter(*args, **kwargs)
             case AbstractLog.LogType.ITEM:
@@ -50,7 +40,7 @@ class AbstractLog(models.Model):
     baseType = LogType.TRANSPORTATION
     
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    logType = models.CharField(max_length=50, choices=LogType.choices,default = LogType.TRANSPORTATION, editable = False)
+    logType = models.CharField(max_length=50, choices=LogType.choices,default = LogType.TRANSPORTATION)
     carbonEmission = models.FloatField(editable = False, default = 0.0)
     timestamp = models.DateTimeField(
         auto_now = True,
@@ -74,6 +64,8 @@ class LogT(AbstractLog):
     transportation = models.ForeignKey(Transportation, on_delete=models.CASCADE, related_name = 'logs', default = 1)
     
     baseType = AbstractLog.LogType.TRANSPORTATION
+    
+    objects = models.Manager()
         
     class Meta:
         verbose_name = 'Transportation Log'
@@ -95,6 +87,7 @@ class LogI(AbstractLog):
     
     baseType = AbstractLog.LogType.ITEM
     
+    objects = models.Manager()
     class Meta:
         verbose_name = 'Item Log'
         verbose_name_plural = 'Item Logs'

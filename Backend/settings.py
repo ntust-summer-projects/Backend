@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_filters',
     'auditlog',
+    'rest_framework_nested'
 ]
 
 MIDDLEWARE = [
