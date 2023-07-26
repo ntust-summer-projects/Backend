@@ -5,7 +5,7 @@ from auditlog.models import LogEntry
 from general.models import User
 import requests
 import django.utils.timezone as timezone
-from .category import ProductCategory, MaterialCategory
+from .category import Category
 
 def getComponyName(vatNumber):
     url = f"https://data.gcis.nat.gov.tw/od/data/api/9D17AE0D-09B5-4732-A8F4-81ADED04B679?$format=json&$filter=Business_Accounting_NO eq { vatNumber }&$skip=0&$top=50"
@@ -23,7 +23,7 @@ class Product(models.Model):
     company = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'products', default = "11111111")
     name = models.CharField(max_length = 20)
     number = models.CharField(max_length = 50, blank = True)
-    category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, related_name = 'products', blank = True, null = True)
+    category = models.ForeignKey(Category, limit_choices_to={'categoryType': Category.CategoryType.PRODUCT}, on_delete=models.SET_NULL, related_name = 'products', blank = True, null = True)
     materials = models.ManyToManyField(to = 'Material', through = 'Component', related_name = 'products')
     carbonEmission = models.FloatField(editable = False, default = 0.0)
     last_update = models.DateTimeField(editable = False, auto_now_add=True)
@@ -58,7 +58,7 @@ class Material(models.Model):
     CName = models.CharField(max_length = 50, default = "未知")
     EName = models.CharField(max_length = 50, default = "Unknown")
     carbonEmission = models.FloatField(default = 0.0)
-    category = models.ForeignKey(MaterialCategory, on_delete=models.SET_NULL, related_name = 'materials', blank = True, null = True)
+    category = models.ForeignKey(Category, limit_choices_to={'categoryType': Category.CategoryType.MATERIAL}, on_delete=models.SET_NULL, related_name = 'materials', blank = True, null = True)
     
     class Meta:
         unique_together = ['CName', 'EName']
