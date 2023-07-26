@@ -7,7 +7,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         exclude = ('user', )
 
 class UserSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer(many=False, source='get_profile')
+    profile = ProfileSerializer(many=True, source='get_profile')
     class Meta:
         model = User
         fields = ('id', 'username', 'profile', 'last_login', 'role', 'phone', 'date_joined')
