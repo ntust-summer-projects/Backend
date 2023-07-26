@@ -15,14 +15,31 @@ class LogManager(models.Manager):
             case _:
                 raise Exception("LogType not found")
             
-    def get_queryset(self,*args,**kwargs):
+    '''def get_queryset(self,*args,**kwargs):
         match kwargs.pop('logType',None):
             case AbstractLog.LogType.TRANSPORTATION:
                 return LogT.objects.get_queryset(*args, **kwargs)
             case AbstractLog.LogType.ITEM:
                 return LogI.objects.get_queryset(*args, **kwargs)
             case _:
-                return super().get_queryset(*args, **kwargs)
+                return super().get_queryset(*args, **kwargs)'''
+            
+    def all(self, *args, **kwargs):
+        match kwargs.pop('logType',None):
+            case AbstractLog.LogType.TRANSPORTATION:
+                return LogT.objects.all(*args, **kwargs)
+            case AbstractLog.LogType.ITEM:
+                return LogI.objects.all(*args, **kwargs)
+            case _:
+                return super().all(*args, **kwargs)
+    def filter(self, *args, **kwargs):
+        match kwargs.pop('logType',None):
+            case AbstractLog.LogType.TRANSPORTATION:
+                return LogT.objects.filter(*args, **kwargs)
+            case AbstractLog.LogType.ITEM:
+                return LogI.objects.filter(*args, **kwargs)
+            case _:
+                return super().filter(*args, **kwargs)
             
                     
 class AbstractLog(models.Model):
