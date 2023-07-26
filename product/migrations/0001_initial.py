@@ -71,7 +71,7 @@ class Migration(migrations.Migration):
                 ('carbonEmission', models.FloatField(default=0.0, editable=False)),
                 ('last_update', models.DateTimeField(auto_now_add=True)),
                 ('category', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='products', to='product.productcategory')),
-                ('company', models.ForeignKey(default='11111111', on_delete=django.db.models.deletion.CASCADE, related_name='products', to='general.company')),
+                ('company', models.ForeignKey(default='11111111', on_delete=django.db.models.deletion.CASCADE, related_name='products', to='general.user')),
                 ('materials', models.ManyToManyField(related_name='products', through='product.Component', to='product.material')),
             ],
         ),

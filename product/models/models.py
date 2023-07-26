@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from auditlog.models import LogEntry
-from general.models import Company
+from general.models import User
 import requests
 import django.utils.timezone as timezone
 from .category import ProductCategory, MaterialCategory
@@ -20,7 +20,7 @@ def getComponyName(vatNumber):
     return "Unknown"
         
 class Product(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name = 'products', default = "11111111")
+    company = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'products', default = "11111111")
     name = models.CharField(max_length = 20)
     number = models.CharField(max_length = 50, blank = True)
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, related_name = 'products', blank = True, null = True)

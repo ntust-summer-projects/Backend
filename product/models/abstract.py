@@ -1,5 +1,5 @@
 from django.db import models
-  
+from rest_framework.exceptions import ValidationError
 
 class AbstractCategory(models.Model):
     name = models.CharField(max_length = 50, unique = True)
@@ -19,7 +19,7 @@ class AbstractCategory(models.Model):
             p = self.parent
             while p:
                 if p.pk == self.pk:
-                    raise Exception("parent error")
+                    raise ValidationError("parent error")
                 p = p.parent
         super().save(*args, **kwargs)
 

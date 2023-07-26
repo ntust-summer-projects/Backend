@@ -1,88 +1,49 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser,BaseUserManager
 from django.db.models.signals import post_save
-import django.utils.timezone as timezone
 from django.dispatch import receiver
-# from product.models import Product
-
-# Create your models here.
+import django.utils.timezone as timezone
+ 
 class User(AbstractUser):
     class Role(models.TextChoices):
         ADMIN = "ADMIN", 'Admin'
         NORMAL = "NORMAL", 'Normal'
         COMPANY = "COMPANY", 'Company'
         
-    base_role = Role.ADMIN
+    # base_role = Role.ADMIN
     
     phone = models.CharField(max_length=50,null=True,blank=True)
     
     role = models.CharField(max_length=50, choices=Role.choices,default = Role.ADMIN)
     
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.role = self.base_role
-            return super().save(*args,**kwargs)
+    def get_profile(self):
+        return Profile.objects.all().filter(user=self.id)
  
-class NormalManager(BaseUserManager):
-    def get_queryset(self,*args,**kwargs):
-        result = super().get_queryset(*args,**kwargs).filter(role=User.Role.NORMAL)
-        return result
-        
-class Normal(User):
-    
-    base_role = User.Role.NORMAL
-    
-    normal = NormalManager()
-    
-    @property
-    def profile(self):
-        return self.normalprofile
-    
-    class Meta:
-        proxy = True
-
-@receiver(post_save, sender=Normal)
+@receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
-    if created and instance.role == "NORMAL":
-        NormalProfile.objects.create(user=instance)
+    if created and instance.role == "ADMIN" or 'Admin':
+        Profile.objects.bulk_create(
+            [Profile(user=instance,meta_key="name"),
+             Profile(user=instance,meta_key="IsAdmin",meta_value="true")]
+            ) 
+    elif created and instance.role == "NORMAL" or 'Normal':
+        Profile.objects.bulk_create(
+            [Profile(user=instance,meta_key="name"),
+             Profile(user=instance,meta_key="wallet",meta_value=0),
+             Profile(user=instance,meta_key="carbonProduce",meta_value=0.0000)]
+            ) 
+    elif created and instance.role == "COMPANY" or 'Company':
+        Profile.objects.bulk_create(
+            [Profile(user=instance,meta_key="companyName"),
+             Profile(user=instance,meta_key="address"),
+             Profile(user=instance,meta_key="vatNumber"),
+             Profile(user=instance,meta_key="chairman")]
+            )
 
-class NormalProfile(models.Model):
-    user = models.OneToOneField(User,on_delete=models.CASCADE)
-    name = models.CharField(max_length=100,null=True,blank=True)
-    wallet = models.PositiveBigIntegerField(editable=False,default=0)
-    carbonProduce = models.DecimalField(max_digits=20,decimal_places=4,default=0.0000)
-
-    
-
-class CompanyManager(BaseUserManager):
-    def get_queryset(self,*args,**kwargs):
-        result = super().get_queryset(*args,**kwargs).filter(role = User.Role.COMPANY)
-        return result
-        
-class Company(User):
-    
-    base_role = User.Role.COMPANY
-    
-    company = CompanyManager()
-    
-    @property
-    def profile(self):
-        return self.companyprofile
-    
-    class Meta:
-        proxy = True
-
-@receiver(post_save, sender=Company)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created and instance.role == "COMPANY":
-        CompanyProfile.objects.create(user=instance)
-
-class CompanyProfile(models.Model):
-    user = models.OneToOneField(User,on_delete=models.CASCADE)
-    companyName = models.CharField(max_length=100,null=True,blank=True)
-    address = models.CharField(max_length=255,null=True,blank=True)
-    vatNumber = models.CharField(max_length = 8, unique = True, default = "00000000", primary_key=True)
-    chairman = models.CharField(max_length=50,null=True,blank=True)
+class Profile(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    meta_key = models.CharField(max_length=50)
+    meta_value = models.CharField(max_length=255,null=True,blank=True)
 
 class Announcement(models.Model):
     title = models.CharField(max_length=50)

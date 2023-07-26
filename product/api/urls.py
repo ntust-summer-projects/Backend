@@ -4,8 +4,9 @@ from . import views
 app_name = 'api'
 
 router = routers.DefaultRouter()
-# router.register('records', views.RecordViewSet)
-# router.register('users', views.UserViewSet)
+router.register('products', views.ProductViewSet)
+router.register('materials', views.MaterialViewSet)
+router.register('logs', views.LogViewSet)
 
 urlpatterns = [
     path('', include(router.urls))

@@ -24,3 +24,7 @@ class LogTAdmin(admin.ModelAdmin):
 @admin.register(LogI)
 class LogIAdmin(admin.ModelAdmin):
     list_display = ('id','user','logType', 'product','amount','carbonEmission','timestamp')
+    
+admin.site.register(AbstractLog)
+admin.site.register(ProductCategory)
+admin.site.register(MaterialCategory)
