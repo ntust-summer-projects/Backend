@@ -1,11 +1,12 @@
 from django.db import models
+from django.db.models.query import QuerySet
 from general.models import User
 from product.models import Transportation, Product
 from auditlog.registry import auditlog
             
 class LogManager(models.Manager):
     def create(*args, **kwargs):
-        t = kwargs.pop('logType',AbstractLog.LogType.TRANSPORTATION)
+        t = kwargs.pop('logType',None)
         match t:
             case AbstractLog.LogType.TRANSPORTATION:
                 return LogT.objects.create(**kwargs)
@@ -13,6 +14,16 @@ class LogManager(models.Manager):
                 return LogI.objects.create(**kwargs)
             case _:
                 raise Exception("LogType not found")
+            
+    def get_queryset(self,*args,**kwargs):
+        match kwargs.pop('logType',None):
+            case AbstractLog.LogType.TRANSPORTATION:
+                return LogT.objects.get_queryset(*args, **kwargs)
+            case AbstractLog.LogType.ITEM:
+                return LogI.objects.get_queryset(*args, **kwargs)
+            case _:
+                return super().get_queryset(*args, **kwargs)
+            
                     
 class AbstractLog(models.Model):
     class LogType(models.TextChoices):
@@ -41,20 +52,11 @@ class AbstractLog(models.Model):
         super().save(*args,**kwargs)
         
     
-class LogTManager(models.Manager):
-    def get_queryset(self, *args, **kwargs):
-        result = super().get_queryset(*args,**kwargs).filter(logType=AbstractLog.LogType.TRANSPORTATION)
-        return result
-    def create(self, *args, **kwargs):
-        return super().create(user = kwargs.get('user'), distance = kwargs.get('distance'), transportation = kwargs.get('transportation'))# for safety
-    
 class LogT(AbstractLog):
     distance = models.FloatField(blank = True, default = 0.0)
     transportation = models.ForeignKey(Transportation, on_delete=models.CASCADE, related_name = 'logs', default = 1)
     
     baseType = AbstractLog.LogType.TRANSPORTATION
-    
-    objects = LogTManager()
         
     class Meta:
         verbose_name = 'Transportation Log'
@@ -69,22 +71,12 @@ class LogT(AbstractLog):
     def save(self, *args, **kwargs):
         self.carbonEmission = self.getEmission()
         super()._save(*args, **kwargs)
-        
-class LogIManager(models.Manager):
-    def get_queryset(self,*args,**kwargs):
-        result = super().get_queryset(*args,**kwargs).filter(logType=AbstractLog.LogType.ITEM)
-        return result
-    
-    def create(self, *args, **kwargs):
-        return super().create(user = kwargs.get('user'), product = kwargs.get('product'), amount = kwargs.get('amount'))
     
 class LogI(AbstractLog):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, default = 1)
     amount = models.PositiveBigIntegerField(default = 0)
     
     baseType = AbstractLog.LogType.ITEM
-    
-    objects = LogIManager()
     
     class Meta:
         verbose_name = 'Item Log'
