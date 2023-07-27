@@ -29,15 +29,11 @@ class Category(models.Model):
             return self.name
     
     def save(self, *args, **kwargs):
-        print("Nomal save")
-        if self.pk:
-            p = self.parent
-            while p:
-                if p.pk == self.pk or p.categoryType != self.categoryType:
-                    raise ValidationError("parent error")
-                p = p.parent
-        elif self.parent and self.parent.categoryType != self.categoryType:
-            raise ValidationError("parent error")
+        p = self.parent
+        while p:
+            if p.pk == self.pk or p.categoryType != self.categoryType:
+                raise ValidationError("parent error")
+            p = p.parent
         
         super().save(*args, **kwargs)
         
@@ -64,5 +60,10 @@ class MaterialCategory(Category):
     def save(self, *args, **kwargs):
         self.categoryType = self.baseType
         super().save(*args, **kwargs)
+        
+        
+        
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique= True)
         
         
