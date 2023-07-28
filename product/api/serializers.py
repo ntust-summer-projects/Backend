@@ -64,7 +64,3 @@ class LogTSerializer(serializers.ModelSerializer):
         fields = '__all__'
         depth = 0
         
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = '__all__'

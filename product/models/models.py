@@ -5,7 +5,6 @@ from auditlog.models import LogEntry
 from general.models import User
 import requests
 import django.utils.timezone as timezone
-from .category import Category, Tag
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
 
@@ -20,6 +19,10 @@ def getComponyName(vatNumber):
         except:
             pass
     return "Unknown"
+    
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique= True)
         
 class Product(models.Model):
     company = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'products', default = "11111111")
@@ -57,12 +60,11 @@ class Product(models.Model):
         return LogEntry.objects.filter(Q(content_type = ContentType.objects.get_for_model(self), object_id = self.pk) |
                                        Q(content_type = ContentType.objects.get_for_model(Component), serialized_data__fields__product = self.pk))
 
-    
+
 class Material(models.Model):
     CName = models.CharField(max_length = 50, default = "未知")
     EName = models.CharField(max_length = 50, default = "Unknown")
     carbonEmission = models.FloatField(default = 0.0)
-    category = models.ForeignKey(Category, limit_choices_to={'categoryType': Category.CategoryType.MATERIAL}, on_delete=models.SET_NULL, related_name = 'materials', blank = True, null = True)
     
     class Meta:
         unique_together = ['CName', 'EName']

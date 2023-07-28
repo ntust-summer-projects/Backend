@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
+from django.utils.decorators import method_decorator
+from docs.product_views_docs import *
 from .serializers import *
 from ..models import *
 
@@ -12,7 +12,9 @@ class ProductViewSet(viewsets.ModelViewSet):
 class MaterialViewSet(viewsets.ModelViewSet):
     queryset = Material.objects.all()
     serializer_class = MaterialSerializer
-    
+
+@log_viewset_doc_list
+@log_viewset_doc_create
 class LogViewSet(viewsets.ModelViewSet):
     queryset = AbstractLog.objects.all()
     serializer_class = LogSerializer
@@ -37,36 +39,17 @@ class LogViewSet(viewsets.ModelViewSet):
     #         return super().get_serializer_class()
     
     def get_queryset(self):
-        logtype = self.kwargs['type'].upper()
-        data = AbstractLog.objects.filter(logType=logtype)
+        
+        log_type = self.kwargs.get('type', None)
+        if log_type:
+            log_type = log_type.upper()
+        data = AbstractLog.objects.filter(logType=log_type)
         if len(data):
             return data
         # else:
         
         #     raise ValidationError("Invalid type")
         return super().get_queryset()
-    
-class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    
-    # def get_serializer_class(self):
-    #     logtype = self.kwargs['type'].upper()
-    #     if logtype == "ITEM":
-    #         return LogISerializer
-    #     elif logtype == "TRANSPORTATION":
-    #         return LogTSerializer
-    #     else:
-    #         return super().get_serializer_class()
-    
-    # def get_queryset(self):
-    #     logtype = self.kwargs['type'].upper()
-    #     data = AbstractLog.objects.filter(logType=logtype)
-    #     if len(data):
-    #         return data
-    #     # else:
-    #     #     raise ValidationError("Invalid type")
-    #     return super().get_queryset()
 
 class LogTypeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):

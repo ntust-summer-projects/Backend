@@ -11,15 +11,15 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'id'
-
+# TODO: profile
 class UserLogViewSet(viewsets.ModelViewSet):
     queryset = AbstractLog.objects.all()
     serializer_class = LogSerializer
     
     def get_queryset(self):
-        return AbstractLog.objects.filter(user_id=self.kwargs['user_id'])
+        return AbstractLog.objects.filter(user_id=self.kwargs.get('user_id', None))
 
-class AnnouncementViewSet(viewsets.ModelViewSet):
+class AnnouncementViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Announcement.objects.all()
     serializer_class = AnnouncementSerializer
 
