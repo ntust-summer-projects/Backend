@@ -9,10 +9,6 @@ class User(AbstractUser):
         ADMIN = "ADMIN", 'Admin'
         NORMAL = "NORMAL", 'Normal'
         COMPANY = "COMPANY", 'Company'
-        
-    # base_role = Role.ADMIN
-    
-    phone = models.CharField(max_length=50,null=True,blank=True)
     
     role = models.CharField(max_length=50, choices=Role.choices,default = Role.ADMIN)
     
@@ -21,25 +17,28 @@ class User(AbstractUser):
  
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
-    if created and instance.role == "ADMIN" or 'Admin':
+    if created and instance.role == "ADMIN" or instance.role == 'Admin':
         Profile.objects.bulk_create(
             [Profile(user=instance,meta_key="name"),
+             Profile(user=instance,meta_key="phone"),
              Profile(user=instance,meta_key="IsAdmin",meta_value="true")]
             ) 
-    elif created and instance.role == "NORMAL" or 'Normal':
+    elif created and instance.role == "NORMAL" or instance.role == 'Normal':
         Profile.objects.bulk_create(
             [Profile(user=instance,meta_key="name"),
+             Profile(user=instance,meta_key="phone"),
              Profile(user=instance,meta_key="wallet",meta_value=0),
              Profile(user=instance,meta_key="carbonProduce",meta_value=0.0000)]
             ) 
-    elif created and instance.role == "COMPANY" or 'Company':
+    elif created and instance.role == "COMPANY" or instance.role == 'Company':
         Profile.objects.bulk_create(
             [Profile(user=instance,meta_key="companyName"),
+             Profile(user=instance,meta_key="phone"),
              Profile(user=instance,meta_key="address"),
              Profile(user=instance,meta_key="vatNumber"),
              Profile(user=instance,meta_key="chairman")]
             )
-
+ 
 class Profile(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     meta_key = models.CharField(max_length=50)
