@@ -5,7 +5,7 @@ from auditlog.models import LogEntry
 from general.models import User
 import requests
 import django.utils.timezone as timezone
-from .category import Category
+from .category import Category, Tag
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
 
@@ -25,7 +25,8 @@ class Product(models.Model):
     company = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'products', default = "11111111")
     name = models.CharField(max_length = 20)
     number = models.CharField(max_length = 50, blank = True)
-    category = models.ForeignKey(Category, limit_choices_to={'categoryType': Category.CategoryType.PRODUCT}, on_delete=models.SET_NULL, related_name = 'products', blank = True, null = True)
+    #category = models.ForeignKey(Category, limit_choices_to={'categoryType': Category.CategoryType.PRODUCT}, on_delete=models.SET_NULL, related_name = 'products', blank = True, null = True)
+    tag = models.ManyToManyField(Tag, related_name= 'products')
     materials = models.ManyToManyField(to = 'Material', through = 'Component', related_name = 'products')
     carbonEmission = models.FloatField(editable = False, default = 0.0)
     last_update = models.DateTimeField(editable = False, auto_now_add=True)
