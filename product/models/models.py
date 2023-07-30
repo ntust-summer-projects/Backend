@@ -5,7 +5,6 @@ from auditlog.models import LogEntry
 from general.models import User
 import requests
 import django.utils.timezone as timezone
-from .category import Category, Tag
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
 import pandas as pd
@@ -23,6 +22,10 @@ def getComponyName(vatNumber):
         except:
             pass
     return "Unknown"
+    
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique= True)
         
 class Product(models.Model):
     company = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'products', default = "11111111")
@@ -60,7 +63,7 @@ class Product(models.Model):
         return LogEntry.objects.filter(Q(content_type = ContentType.objects.get_for_model(self), object_id = self.pk) |
                                        Q(content_type = ContentType.objects.get_for_model(Component), serialized_data__fields__product = self.pk))
 
-    
+
 class Material(models.Model):
     name = models.CharField(max_length = 50, default = "未知", unique=True)
     carbonEmission = models.FloatField(default = 0.0)

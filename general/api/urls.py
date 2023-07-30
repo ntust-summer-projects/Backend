@@ -10,6 +10,10 @@ router.register('announcements', views.AnnouncementViewSet)
 user_log_router = routers.NestedDefaultRouter(router, r'users', lookup='user')
 user_log_router.register(r'logs', views.UserLogViewSet, basename='user-logs')
 
+router.register('registration',views.RegisrationViewSet)
+router.register('login',views.LoginViewSet)
+router.register('logout',views.LogoutViewset)
+
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(user_log_router.urls))

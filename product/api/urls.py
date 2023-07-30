@@ -7,7 +7,6 @@ router = routers.DefaultRouter()
 router.register('products', views.ProductViewSet)
 router.register('materials', views.MaterialViewSet)
 router.register('logs/(?P<type>[^/.]+)', views.LogViewSet)
-router.register('categories', views.CategoryViewSet)
 
 urlpatterns = [
     path('', include(router.urls))

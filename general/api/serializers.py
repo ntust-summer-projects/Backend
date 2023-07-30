@@ -42,3 +42,32 @@ class AnnouncementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Announcement
         fields = '__all__'
+
+class RegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username','password','email','role']
+        
+    extra_kwargs = {
+        'password' : {'write_only': True}
+    }
+    
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        user = User(**validated_data)
+        if password:
+            user.set_password(password)
+        
+        user.save()
+        return user
+    
+class LoginSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username','password']
+        
+class LogoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = None
+        fields = None
