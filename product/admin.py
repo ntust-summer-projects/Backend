@@ -11,7 +11,7 @@ class ComponentAdmin(admin.ModelAdmin):
 
 @admin.register(Material)
 class MaterialAdmin(admin.ModelAdmin):
-    list_display = ('CName','EName','carbonEmission')
+    list_display = ('name','carbonEmission')
     
 @admin.register(Transportation)
 class TransportationAdmin(admin.ModelAdmin):
@@ -43,3 +43,4 @@ class MaterialCategoryAdmin(admin.ModelAdmin):
 
 admin.site.register(Category)
 admin.site.register(Tag)
+admin.site.register(UploadMaterial)
