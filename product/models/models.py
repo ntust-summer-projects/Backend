@@ -23,13 +23,12 @@ def getComponyName(vatNumber):
 
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique= True)
-        
+
 class Product(models.Model):
     company = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'products', default = "11111111")
     name = models.CharField(max_length = 20)
     number = models.CharField(max_length = 50, blank = True)
-    #category = models.ForeignKey(Category, limit_choices_to={'categoryType': Category.CategoryType.PRODUCT}, on_delete=models.SET_NULL, related_name = 'products', blank = True, null = True)
-    tag = models.ManyToManyField(Tag, related_name= 'products')
+    tag = models.ManyToManyField(Tag, related_name= 'products', blank=True)
     materials = models.ManyToManyField(to = 'Material', through = 'Component', related_name = 'products')
     carbonEmission = models.FloatField(editable = False, default = 0.0)
     last_update = models.DateTimeField(editable = False, auto_now_add=True)
@@ -56,21 +55,20 @@ class Product(models.Model):
         super().save(*args, **kwargs)
         #self.getLog()
 
-    def getLog(self):
+    def get_log(self):
         return LogEntry.objects.filter(Q(content_type = ContentType.objects.get_for_model(self), object_id = self.pk) |
                                        Q(content_type = ContentType.objects.get_for_model(Component), serialized_data__fields__product = self.pk))
+        
+    def get_component(self):
+        return Component.objects.filter(product_id=self.id)
 
 
 class Material(models.Model):
-    CName = models.CharField(max_length = 50, default = "未知")
-    EName = models.CharField(max_length = 50, default = "Unknown")
+    name = models.CharField(max_length = 50, default = "未知")
     carbonEmission = models.FloatField(default = 0.0)
     
-    class Meta:
-        unique_together = ['CName', 'EName']
-    
     def __str__(self):
-        return f"{ self.EName } { self.CName }"
+        return f"{ self.name }"
     
     def save(self, *args, **kwargs):
         if self.pk and Material.objects.get(pk = self.pk).carbonEmission != self.carbonEmission:
@@ -100,7 +98,6 @@ class Component(models.Model):
     product = models.ForeignKey(to = 'Product', on_delete=models.CASCADE, default = 1)
     material = models.ForeignKey(to = 'Material', on_delete=models.CASCADE, default = 1)
     weight = models.FloatField(default = 0.0)
-    description = models.TextField(blank = True)
     carbonEmission = models.FloatField(editable = False, default = 0.0)
     
     class Meta:

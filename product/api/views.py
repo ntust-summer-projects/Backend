@@ -1,27 +1,55 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from django.utils.decorators import method_decorator
+from rest_framework.decorators import action
 from docs.product_views_docs import *
 from .serializers import *
 from ..models import *
 
-class ProductViewSet(viewsets.ModelViewSet):
+@readonlyproduct_viewset_doc_list
+@readonlyproduct_viewset_doc_retrieve
+class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet): # TODO: add index and amount
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    
+    def get_queryset(self):
+        tags = self.request.query_params.getlist('tags', None)
+        queryset = super().get_queryset()
+        for tag in tags:
+            queryset = queryset.filter(tag=tag)
+        return queryset
+        
+@companyproduct_viewset_doc_list
+@companyproduct_viewset_doc_create
+@companyproduct_viewset_doc_retrieve
+@companyproduct_viewset_doc_update
+class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    
+    def get_queryset(self):
+        return super().get_queryset().filter(company=self.request.user.id)
+    
+    @swagger_auto_schema(auto_schema=None)
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
 
 class MaterialViewSet(viewsets.ModelViewSet):
     queryset = Material.objects.all()
     serializer_class = MaterialSerializer
 
 @log_viewset_doc_list
+@log_viewset_doc_retrieve
 @log_viewset_doc_create
-class LogViewSet(viewsets.ModelViewSet):
+@log_viewset_doc_update
+@log_viewset_doc_delete
+class LogViewSet(viewsets.ModelViewSet): # TODO: check role is NORMAL
     queryset = AbstractLog.objects.all()
     serializer_class = LogSerializer
     
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
         data['logType'] = self.kwargs['type'].upper()
+        data['user'] = request.user.id
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         
@@ -29,14 +57,26 @@ class LogViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
-    # def get_serializer_class(self):
-    #     logtype = self.kwargs['type'].upper()
-    #     if logtype == "ITEM":
-    #         return LogISerializer
-    #     elif logtype == "TRANSPORTATION":
-    #         return LogTSerializer
-    #     else:
-    #         return super().get_serializer_class()
+    def update(self, request, *args, **kwargs):
+        data = request.data.copy()
+        data['logType'] = self.kwargs['type'].upper()
+        data['user'] = request.user.id
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+    
+    @swagger_auto_schema(auto_schema=None)
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
     
     def get_queryset(self):
         
@@ -55,8 +95,8 @@ class LogTypeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return AbstractLog.objects.filter(logtype=self.kwargs['log_type_pk'])
 
-# class CategoryViewSet(viewsets.ModelViewSet):
-#     queryset = CategoryManager.all(type="ITEM")
-#     serializer_class = CategorySerializer
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
 
 # TODO: category material log
