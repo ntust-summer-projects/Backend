@@ -168,6 +168,10 @@ def updateMaterial(sender, instance, created, **kwargs):
     
     fileType = magic_obj.from_file(instance.file.path)
     
+    def updateOrCreateMaterial(data):
+        for index, row in data.iterrows():
+            Material.objects.update_or_create({ 'name': row[instance.nameField], 'carbonEmission': float(row[instance.coeField]), }, name = row[instance.nameField])
+    
     if "XML" in fileType:
         tree = ET.parse(instance.file.path)
         root = tree.getroot()
@@ -176,17 +180,14 @@ def updateMaterial(sender, instance, created, **kwargs):
     elif "Excel" in fileType:
         excel_sheet = pd.read_excel(instance.file.path, sheet_name = None, usecols = [instance.nameField, instance.coeField])
         for sheet_name, sheet_data in excel_sheet.items():
-            for index, row in sheet_data.iterrows():
-                Material.objects.update_or_create({ 'name': row[instance.nameField], 'carbonEmission': float(row[instance.coeField]), }, name = row[instance.nameField])
+            updateOrCreateMaterial(sheet_data)
     elif "CSV" in fileType:
         csv = pd.read_csv(instance.file.path, usecols = [instance.nameField, instance.coeField])
-        for index, row in csv.iterrows():
-            Material.objects.update_or_create({ 'name': row[instance.nameField], 'carbonEmission': float(row[instance.coeField]), }, name = row[instance.nameField])
+        updateOrCreateMaterial(csv)
     else:
         try:
             file = pd.read_json(instance.file.path)
-            for index, row in file.iterrows():
-                Material.objects.update_or_create({ 'name': row[instance.nameField], 'carbonEmission': float(row[instance.coeField]), }, name = row[instance.nameField])
+            updateOrCreateMaterial(file)
         except:
             file = codecs.open(instance.file.path, 'r', 'utf_8_sig')
             data = json.load(file)
