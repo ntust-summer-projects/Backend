@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from auditlog.models import LogEntry
 from general.models import User
@@ -7,6 +7,9 @@ import requests
 import django.utils.timezone as timezone
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
+import pandas as pd
+import magic
+import xml.etree.ElementTree as ET
 
 def getComponyName(vatNumber):
     url = f"https://data.gcis.nat.gov.tw/od/data/api/9D17AE0D-09B5-4732-A8F4-81ADED04B679?$format=json&$filter=Business_Accounting_NO eq { vatNumber }&$skip=0&$top=50"
@@ -122,3 +125,29 @@ class Component(models.Model):
 @receiver(post_delete, sender = Component, dispatch_uid = 'component_delete_signal')
 def update_carbonEmission(sender, instance, using, **kwargs):
     instance.product.save(force_update = True)
+    
+class UploadMaterial(models.Model):
+    file = models.FileField(upload_to = 'materialData/%Y/%m/%d/')
+    nameField = models.CharField(max_length = 50, default = 'name')
+    coeField = models.CharField(max_length = 50, default = 'coe')
+    dateTime = models.DateTimeField(auto_now = True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        
+@receiver(post_save, sender = UploadMaterial, dispatch_uid = 'updateMaterial')
+def updateMaterial(sender, instance, created, **kwargs):
+    magic_obj = magic.Magic()
+    
+    fileType = magic_obj.from_file(instance.file.path)
+    
+    if "XML" in fileType:
+        tree = ET.parse(instance.file.path)
+        root = tree.getroot()
+        for material in root:
+            Material.objects.update_or_create({ 'name': material.find(instance.nameField).text, 'carbonEmission': float(material.find(instance.coeField).text), }, name = material.find(instance.nameField).text)
+    elif "Excel" in fileType:
+        excel_sheet = pd.read_excel(instance.file.path, sheet_name = None, usecols = [instance.nameField, instance.coeField])
+        for sheet_name, sheet_data in excel_sheet.items():
+            for index, row in sheet_data.iterrows():
+                Material.objects.update_or_create({ 'name': row.get(instance.nameField), 'carbonEmission': float(row.get(instance.coeField)), }, name = row.get(instance.nameField))
