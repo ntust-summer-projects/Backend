@@ -1,16 +1,22 @@
 from rest_framework import serializers
 from general.models import User, Profile, Announcement
+from rest_framework.exceptions import ValidationError
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         exclude = ('user', )
+    
+    def update(self, instance, validated_data):
+        if(validated_data['meta_key'] == 'vatNumber'):
+            raise ValidationError("vatNumber should not be changed.")
+        return super().update(instance, validated_data)
 
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(many=True, source='get_profile')
     class Meta:
         model = User
-        fields = ('id', 'username', 'profile', 'last_login', 'role', 'phone', 'date_joined')
+        fields = ('id', 'username', 'profile', 'last_login', 'role', 'date_joined')
         depth = 1
     
     def create(self, validated_data):
@@ -52,7 +58,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
         'password' : {'write_only': True}
     }
     
-
     def create(self, validated_data):
         password = validated_data.pop('password', None)
         user = User(**validated_data)
@@ -69,5 +74,5 @@ class LoginSerializer(serializers.ModelSerializer):
         
 class LogoutSerializer(serializers.ModelSerializer):
     class Meta:
-        model = None
-        fields = None
+        model = User
+        fields = ('username', )

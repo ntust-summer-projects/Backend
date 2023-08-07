@@ -8,6 +8,9 @@ class LogManager(models.Manager):
         t = kwargs.get('logType',None)
         match t:
             case AbstractLog.LogType.TRANSPORTATION:
+                user_id = kwargs.pop('user')
+                user = User.objects.filter(id=user_id)
+                kwargs['user'] = user
                 return LogT.objects.create(**kwargs)
             case AbstractLog.LogType.ITEM:
                 return LogI.objects.create(**kwargs)

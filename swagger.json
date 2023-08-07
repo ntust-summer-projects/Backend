@@ -1,0 +1,1122 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Snippets API",
+        "description": "Test description",
+        "termsOfService": "https://www.google.com/policies/terms/",
+        "contact": {
+            "email": "contact@snippets.local"
+        },
+        "license": {
+            "name": "BSD License"
+        },
+        "version": "v1"
+    },
+    "basePath": "/api",
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    },
+    "security": [
+        {
+            "Bearer": []
+        }
+    ],
+    "paths": {
+        "/announcements/": {
+            "get": {
+                "operationId": "announcements_list",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Announcement"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "announcements"
+                ]
+            },
+            "parameters": []
+        },
+        "/announcements/{id}/": {
+            "get": {
+                "operationId": "announcements_read",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Announcement"
+                        }
+                    }
+                },
+                "tags": [
+                    "announcements"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "A unique integer value identifying this announcement.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/login/": {
+            "post": {
+                "operationId": "login_create",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Login"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Login"
+                        }
+                    }
+                },
+                "tags": [
+                    "login"
+                ]
+            },
+            "parameters": []
+        },
+        "/logout": {
+            "get": {
+                "operationId": "logout_list",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "logout"
+                ]
+            },
+            "parameters": []
+        },
+        "/logs/{type}/": {
+            "get": {
+                "operationId": "logs_list",
+                "summary": "Get all logs of a certain type for a user",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "The type of logs.",
+                        "type": "string",
+                        "enum": [
+                            "TRANSPORTATION",
+                            "ITEM"
+                        ],
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Log"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "logs"
+                ]
+            },
+            "post": {
+                "operationId": "logs_create",
+                "summary": "Create new log of a certain type",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "title": "log properties",
+                            "type": "object",
+                            "properties": {
+                                "timestamp": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                "product": {
+                                    "description": "The product id.<br/>Only required if the type is ITEM",
+                                    "type": "integer"
+                                },
+                                "amount": {
+                                    "description": "The amount of items.<br/>Only required if the type is ITEM",
+                                    "type": "integer"
+                                },
+                                "transportation": {
+                                    "description": "The transportation id.<br/>Only required if the type is ITEM",
+                                    "type": "integer"
+                                },
+                                "distance": {
+                                    "type": "number",
+                                    "format": "float"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "The type of logs.",
+                        "type": "string",
+                        "enum": [
+                            "TRANSPORTATION",
+                            "ITEM"
+                        ],
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "title": "log properties",
+                            "type": "object",
+                            "properties": {
+                                "timestamp": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                "product": {
+                                    "description": "The product id.<br/>Only required if the type is ITEM",
+                                    "type": "integer"
+                                },
+                                "amount": {
+                                    "description": "The amount of items.<br/>Only required if the type is ITEM",
+                                    "type": "integer"
+                                },
+                                "transportation": {
+                                    "description": "The transportation id.<br/>Only required if the type is ITEM",
+                                    "type": "integer"
+                                },
+                                "distance": {
+                                    "type": "number",
+                                    "format": "float"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "logs"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "type",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/logs/{type}/{id}/": {
+            "get": {
+                "operationId": "logs_read",
+                "summary": "Get a certain log of user",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "The type of logs.",
+                        "type": "string",
+                        "enum": [
+                            "TRANSPORTATION",
+                            "ITEM"
+                        ],
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Log"
+                        }
+                    }
+                },
+                "tags": [
+                    "logs"
+                ]
+            },
+            "put": {
+                "operationId": "logs_update",
+                "summary": "Update a certain log",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "title": "log properties",
+                            "type": "object",
+                            "properties": {
+                                "timestamp": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                "product": {
+                                    "description": "The product id.<br/>Only required if the type is ITEM",
+                                    "type": "integer"
+                                },
+                                "amount": {
+                                    "description": "The amount of items.<br/>Only required if the type is ITEM",
+                                    "type": "integer"
+                                },
+                                "transportation": {
+                                    "description": "The transportation id.<br/>Only required if the type is ITEM",
+                                    "type": "integer"
+                                },
+                                "distance": {
+                                    "type": "number",
+                                    "format": "float"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "The type of logs.",
+                        "type": "string",
+                        "enum": [
+                            "TRANSPORTATION",
+                            "ITEM"
+                        ],
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "title": "log properties",
+                            "type": "object",
+                            "properties": {
+                                "timestamp": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                "product": {
+                                    "description": "The product id.<br/>Only required if the type is ITEM",
+                                    "type": "integer"
+                                },
+                                "amount": {
+                                    "description": "The amount of items.<br/>Only required if the type is ITEM",
+                                    "type": "integer"
+                                },
+                                "transportation": {
+                                    "description": "The transportation id.<br/>Only required if the type is ITEM",
+                                    "type": "integer"
+                                },
+                                "distance": {
+                                    "type": "number",
+                                    "format": "float"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "logs"
+                ]
+            },
+            "delete": {
+                "operationId": "logs_delete",
+                "summary": "Remove a certain log of user",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "description": "The type of logs.",
+                        "type": "string",
+                        "enum": [
+                            "TRANSPORTATION",
+                            "ITEM"
+                        ],
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "logs"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "type",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "A unique integer value identifying this abstract log.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/materials/": {
+            "get": {
+                "operationId": "materials_list",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Material"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "materials"
+                ]
+            },
+            "post": {
+                "operationId": "materials_create",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Material"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Material"
+                        }
+                    }
+                },
+                "tags": [
+                    "materials"
+                ]
+            },
+            "parameters": []
+        },
+        "/materials/{id}/": {
+            "get": {
+                "operationId": "materials_read",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Material"
+                        }
+                    }
+                },
+                "tags": [
+                    "materials"
+                ]
+            },
+            "put": {
+                "operationId": "materials_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Material"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Material"
+                        }
+                    }
+                },
+                "tags": [
+                    "materials"
+                ]
+            },
+            "patch": {
+                "operationId": "materials_partial_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Material"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Material"
+                        }
+                    }
+                },
+                "tags": [
+                    "materials"
+                ]
+            },
+            "delete": {
+                "operationId": "materials_delete",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "materials"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "A unique integer value identifying this material.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/products/": {
+            "get": {
+                "operationId": "products_list",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Product"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "products"
+                ]
+            },
+            "post": {
+                "operationId": "products_create",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Product"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Product"
+                        }
+                    }
+                },
+                "tags": [
+                    "products"
+                ]
+            },
+            "parameters": []
+        },
+        "/products/{id}/": {
+            "get": {
+                "operationId": "products_read",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Product"
+                        }
+                    }
+                },
+                "tags": [
+                    "products"
+                ]
+            },
+            "put": {
+                "operationId": "products_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Product"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Product"
+                        }
+                    }
+                },
+                "tags": [
+                    "products"
+                ]
+            },
+            "patch": {
+                "operationId": "products_partial_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Product"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Product"
+                        }
+                    }
+                },
+                "tags": [
+                    "products"
+                ]
+            },
+            "delete": {
+                "operationId": "products_delete",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "products"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "A unique integer value identifying this product.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        },
+        "/register/": {
+            "post": {
+                "operationId": "register_create",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "tags": [
+                    "register"
+                ]
+            },
+            "parameters": []
+        },
+        "/tags/": {
+            "get": {
+                "operationId": "tags_list",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Tag"
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "tags"
+                ]
+            },
+            "post": {
+                "operationId": "tags_create",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Tag"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Tag"
+                        }
+                    }
+                },
+                "tags": [
+                    "tags"
+                ]
+            },
+            "parameters": []
+        },
+        "/tags/{id}/": {
+            "get": {
+                "operationId": "tags_read",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Tag"
+                        }
+                    }
+                },
+                "tags": [
+                    "tags"
+                ]
+            },
+            "put": {
+                "operationId": "tags_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Tag"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Tag"
+                        }
+                    }
+                },
+                "tags": [
+                    "tags"
+                ]
+            },
+            "patch": {
+                "operationId": "tags_partial_update",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Tag"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/Tag"
+                        }
+                    }
+                },
+                "tags": [
+                    "tags"
+                ]
+            },
+            "delete": {
+                "operationId": "tags_delete",
+                "description": "",
+                "parameters": [],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "tags"
+                ]
+            },
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "A unique integer value identifying this tag.",
+                    "required": true,
+                    "type": "integer"
+                }
+            ]
+        }
+    },
+    "definitions": {
+        "Announcement": {
+            "required": [
+                "title",
+                "context"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "title": {
+                    "title": "Title",
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
+                "upload_date": {
+                    "title": "Upload date",
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "edit_date": {
+                    "title": "Edit date",
+                    "type": "string",
+                    "format": "date-time",
+                    "readOnly": true
+                },
+                "context": {
+                    "title": "Context",
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "Login": {
+            "required": [
+                "username",
+                "password"
+            ],
+            "type": "object",
+            "properties": {
+                "username": {
+                    "title": "Username",
+                    "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+                    "type": "string",
+                    "pattern": "^[\\w.@+-]+$",
+                    "maxLength": 150,
+                    "minLength": 1
+                },
+                "password": {
+                    "title": "Password",
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 1
+                }
+            }
+        },
+        "Log": {
+            "required": [
+                "user"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "logType": {
+                    "title": "LogType",
+                    "type": "string",
+                    "enum": [
+                        "TRANSPORTATION",
+                        "ITEM"
+                    ]
+                },
+                "carbonEmission": {
+                    "title": "CarbonEmission",
+                    "type": "number",
+                    "readOnly": true
+                },
+                "timestamp": {
+                    "title": "Timestamp",
+                    "type": "string",
+                    "format": "date-time",
+                    "readOnly": true
+                },
+                "user": {
+                    "title": "User",
+                    "type": "integer"
+                }
+            }
+        },
+        "Material": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "CName": {
+                    "title": "CName",
+                    "type": "string",
+                    "default": "¥¼ª¾",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
+                "EName": {
+                    "title": "EName",
+                    "type": "string",
+                    "default": "Unknown",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
+                "carbonEmission": {
+                    "title": "CarbonEmission",
+                    "type": "number"
+                }
+            }
+        },
+        "ProductLog": {
+            "required": [
+                "object_pk",
+                "object_repr",
+                "action"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "object_pk": {
+                    "title": "Object pk",
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "object_id": {
+                    "title": "Object id",
+                    "type": "integer",
+                    "maximum": 9223372036854775807,
+                    "minimum": -9223372036854775808,
+                    "x-nullable": true
+                },
+                "object_repr": {
+                    "title": "Object representation",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "serialized_data": {
+                    "title": "Serialized data",
+                    "type": "object",
+                    "x-nullable": true
+                },
+                "action": {
+                    "title": "Action",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3
+                    ]
+                },
+                "changes": {
+                    "title": "Change message",
+                    "type": "string"
+                },
+                "remote_addr": {
+                    "title": "Remote address",
+                    "type": "string",
+                    "minLength": 1,
+                    "x-nullable": true
+                },
+                "timestamp": {
+                    "title": "Timestamp",
+                    "type": "string",
+                    "format": "date-time",
+                    "readOnly": true
+                },
+                "actor": {
+                    "title": "Actor",
+                    "type": "integer",
+                    "x-nullable": true
+                }
+            }
+        },
+        "Product": {
+            "required": [
+                "materials",
+                "name",
+                "tag"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "logs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ProductLog"
+                    },
+                    "readOnly": true
+                },
+                "materials": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Material"
+                    }
+                },
+                "name": {
+                    "title": "Name",
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 1
+                },
+                "number": {
+                    "title": "Number",
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "carbonEmission": {
+                    "title": "CarbonEmission",
+                    "type": "number",
+                    "readOnly": true
+                },
+                "last_update": {
+                    "title": "Last update",
+                    "type": "string",
+                    "format": "date-time",
+                    "readOnly": true
+                },
+                "company": {
+                    "title": "Company",
+                    "type": "integer"
+                },
+                "tag": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "uniqueItems": true
+                }
+            }
+        },
+        "Tag": {
+            "required": [
+                "name"
+            ],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "title": "ID",
+                    "type": "integer",
+                    "readOnly": true
+                },
+                "name": {
+                    "title": "Name",
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                }
+            }
+        }
+    }
+}

@@ -4,17 +4,17 @@ from . import views
 app_name = 'api'
 
 router = routers.DefaultRouter()
-router.register('users', views.UserViewSet)
+router.register('user', views.UserViewSet)
 router.register('announcements', views.AnnouncementViewSet)
 
-user_log_router = routers.NestedDefaultRouter(router, r'users', lookup='user')
-user_log_router.register(r'logs', views.UserLogViewSet, basename='user-logs')
+# user_log_router = routers.NestedDefaultRouter(router, r'users', lookup='user')
+# user_log_router.register(r'logs', views.UserLogViewSet, basename='user-logs')
 
-router.register('registration',views.RegisrationViewSet)
-router.register('login',views.LoginViewSet)
-router.register('logout',views.LogoutViewset)
+router.register('register',views.RegisterViewSet, basename='user-register')
+router.register('login',views.LoginViewSet, basename='user-login')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('', include(user_log_router.urls))
+    # path('', include(user_log_router.urls)),
+    path(r'logout', views.LogoutViewset.as_view(), name='user-logout')
 ]
