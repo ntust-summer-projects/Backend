@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from auditlog.models import LogEntry
 from general.models import User
@@ -10,6 +10,9 @@ from django.contrib.contenttypes.models import ContentType
 import pandas as pd
 import magic
 import xml.etree.ElementTree as ET
+import json
+import codecs
+import os
 
 def getComponyName(vatNumber):
     url = f"https://data.gcis.nat.gov.tw/od/data/api/9D17AE0D-09B5-4732-A8F4-81ADED04B679?$format=json&$filter=Business_Accounting_NO eq { vatNumber }&$skip=0&$top=50"
@@ -127,7 +130,7 @@ def update_carbonEmission(sender, instance, using, **kwargs):
     instance.product.save(force_update = True)
     
 class UploadMaterial(models.Model):
-    file = models.FileField(upload_to = 'materialData/%Y/%m/%d/')
+    file = models.FileField(upload_to = 'uploads/%Y/%m/%d/')
     nameField = models.CharField(max_length = 50, default = 'name')
     coeField = models.CharField(max_length = 50, default = 'coe')
     dateTime = models.DateTimeField(auto_now = True)
@@ -135,11 +138,39 @@ class UploadMaterial(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         
-@receiver(post_save, sender = UploadMaterial, dispatch_uid = 'updateMaterial')
+@receiver(post_delete, sender=UploadMaterial)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    if instance.file:
+        if os.path.isfile(instance.file.path):
+            os.remove(instance.file.path)
+
+@receiver(pre_save, sender=UploadMaterial)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return False
+
+    try:
+        old_file = UploadMaterial.objects.get(pk=instance.pk).file
+    except UploadMaterial.DoesNotExist:
+        return False
+
+    new_file = instance.file
+    if not old_file == new_file:
+        if os.path.isfile(old_file.path):
+            os.remove(old_file.path)
+        
+@receiver(post_save, sender = UploadMaterial)
 def updateMaterial(sender, instance, created, **kwargs):
+    if not instance.file:
+        return False
+    
     magic_obj = magic.Magic()
     
     fileType = magic_obj.from_file(instance.file.path)
+    
+    def updateOrCreateMaterial(data):
+        for index, row in data.iterrows():
+            Material.objects.update_or_create({ 'name': row[instance.nameField], 'carbonEmission': float(row[instance.coeField]), }, name = row[instance.nameField])
     
     if "XML" in fileType:
         tree = ET.parse(instance.file.path)
@@ -149,5 +180,16 @@ def updateMaterial(sender, instance, created, **kwargs):
     elif "Excel" in fileType:
         excel_sheet = pd.read_excel(instance.file.path, sheet_name = None, usecols = [instance.nameField, instance.coeField])
         for sheet_name, sheet_data in excel_sheet.items():
-            for index, row in sheet_data.iterrows():
-                Material.objects.update_or_create({ 'name': row.get(instance.nameField), 'carbonEmission': float(row.get(instance.coeField)), }, name = row.get(instance.nameField))
+            updateOrCreateMaterial(sheet_data)
+    elif "CSV" in fileType:
+        csv = pd.read_csv(instance.file.path, usecols = [instance.nameField, instance.coeField])
+        updateOrCreateMaterial(csv)
+    else:
+        try:
+            file = pd.read_json(instance.file.path)
+            updateOrCreateMaterial(file)
+        except:
+            file = codecs.open(instance.file.path, 'r', 'utf_8_sig')
+            data = json.load(file)
+            for row in data:
+                Material.objects.update_or_create({ 'name': row[instance.nameField], 'carbonEmission': float(row[instance.coeField]), }, name = row[instance.nameField])
