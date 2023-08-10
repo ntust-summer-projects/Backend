@@ -86,14 +86,16 @@ WSGI_APPLICATION = 'Backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+import os
+_env = os.environ
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'backend',
-        'USER': 'root',
-        'PASSWORD': 'password',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'NAME': _env['DB_NAME'],
+        'USER': _env['DB_USER'],
+        'PASSWORD': _env['DB_PASS'],
+        'HOST': 'db',
+        'PORT': _env['DB_PORT'],
         'OPTIONS': {'charset':'utf8mb4'}, 
     }
 }

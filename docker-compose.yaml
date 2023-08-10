@@ -1,0 +1,30 @@
+version: '3.11'
+
+services:
+  db:
+    image: mariadb:11.0
+    container_name: django-web-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: backend
+      MYSQL_USER: root
+      MYSQL_PASSWORD: password
+
+  web:
+    build: ./
+    image: django-web
+    container_name: django-web-backend
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - ./:/code
+    command: /bin/bash -c "python3 manage.py makemigrations && python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000 "
+    ports:
+      - "8000:8000"
+    environment:
+      DB_NAME: backend
+      DB_USER: root
+      DB_PASS: password
+      DB_PORT: 3306
