@@ -91,11 +91,11 @@ _env = os.environ
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': _env['DB_NAME'],
-        'USER': _env['DB_USER'],
-        'PASSWORD': _env['DB_PASS'],
-        'HOST': 'db',
-        'PORT': _env['DB_PORT'],
+        'NAME': _env.get('DB_NAME', 'backend'),
+        'USER': _env.get('DB_USER', 'root'),
+        'PASSWORD': _env.get('DB_PASS', 'password'),
+        'HOST': _env.get('DB_HOST', '127.0.0.1'),
+        'PORT': _env.get('DB_PORT', '3306'),
         'OPTIONS': {'charset':'utf8mb4'}, 
     }
 }
