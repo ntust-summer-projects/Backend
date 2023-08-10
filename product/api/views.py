@@ -33,7 +33,7 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
 
-class MaterialViewSet(viewsets.ModelViewSet):
+class MaterialViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Material.objects.all()
     serializer_class = MaterialSerializer
 
