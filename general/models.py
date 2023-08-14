@@ -44,6 +44,9 @@ class Profile(models.Model):
     meta_key = models.CharField(max_length=50)
     meta_value = models.CharField(max_length=255,null=True,blank=True)
 
+    class Meta:
+        unique_together = ['user','meta_key']
+
 class Announcement(models.Model):
     title = models.CharField(max_length=50)
     upload_date = models.DateTimeField(default=timezone.now)
