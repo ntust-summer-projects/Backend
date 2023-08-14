@@ -7,16 +7,30 @@ from ..models import *
 
 @readonlyproduct_viewset_doc_list
 @readonlyproduct_viewset_doc_retrieve
-class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet): # TODO: add index and amount
+class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet): 
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     
     def get_queryset(self):
+        search = self.request.GET.get('search', None)
+        try:
+            offset = int(self.request.GET.get('offset', 0))
+        except ValueError:
+            raise ValidationError({"offset":'must be integer'})
+        try:
+            size = int(self.request.GET.get('size', 10))
+        except ValueError:
+            raise ValidationError({"size":'must be integer'})
         tags = self.request.query_params.getlist('tags', None)
+        
         queryset = super().get_queryset()
         for tag in tags:
             queryset = queryset.filter(tag=tag)
-        return queryset
+                
+        if search is not None:
+            queryset = queryset.filter(name__contains=search)
+        return queryset[offset: offset+size]
+    
         
 @companyproduct_viewset_doc_list
 @companyproduct_viewset_doc_create
@@ -33,7 +47,7 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
 
-class MaterialViewSet(viewsets.ModelViewSet):
+class MaterialViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Material.objects.all()
     serializer_class = MaterialSerializer
 
