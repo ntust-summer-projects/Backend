@@ -49,15 +49,15 @@ def getRandomStr():
 
 def getRandomProductName():
     adj = ['毀損', '粗糙', '普通','漂亮','完美', '無暇', '極品', '日本製','中國製']
-    noun = ['桌子','椅子','沙發','電視','冰箱','冷氣', '熱水壺','電鍋','汽車','摩托車', '飛機','火車','油輪', '筆', '清潔劑','繃帶','水壺','牙膏']
+    noun = ['桌子','椅子','沙發','電視','冰箱','冷氣', '熱水壺','電鍋','汽車','摩托車', '飛機','火車','油輪', '筆', '清潔劑','繃帶','牙膏']
 
     return random.choice(adj) + '的' + random.choice(noun)
 
 def createNormalUser():
     try:
-        user = User.objects.create(username = getRandomStr(), password = getRandomStr(), role = User.Role.NORMAL)
-        Profile.objects.update_or_create(user = user, meta_key = 'name', meta_value = getRandomPersonName())
-        Profile.objects.update_or_create(user = user, meta_key = 'phone', meta_value = getRandomPhone())
+        user = User.objects.create(username = getRandomStr(), password = getRandomStr(),  email = getRandomStr() + "@gmail.com", role = User.Role.NORMAL)
+        Profile.objects.update_or_create({'meta_value': getRandomPersonName()}, user = user, meta_key = 'name')
+        Profile.objects.update_or_create({'meta_value': getRandomPhone()}, user = user, meta_key = 'phone')
     except Exception as e:
         print(e)
         createNormalUser()
@@ -65,10 +65,10 @@ def createNormalUser():
         
 def createCompany():
     try:
-        company = User.objects.create(username = getRandomStr(), password = getRandomStr(), role = User.Role.COMPANY)
-        Profile.objects.update_or_create(user = company, meta_key = 'companyName', meta_value = getRandomCompanyName())
-        Profile.objects.update_or_create(user = company, meta_key = 'phone', meta_value = getRandomPhone())
-        Profile.objects.update_or_create(user = company, meta_key = 'chairman', meta_value = getRandomPersonName())
+        company = User.objects.create(username = getRandomStr(), password = getRandomStr(), email = getRandomStr() + "@gmail.com", role = User.Role.COMPANY)
+        Profile.objects.update_or_create({'meta_value': getRandomCompanyName()}, user = company, meta_key = 'companyName')
+        Profile.objects.update_or_create({'meta_value': getRandomPhone()}, user = company, meta_key = 'phone')
+        Profile.objects.update_or_create({'meta_value': getRandomPersonName()}, user = company, meta_key = 'chairman')
     except Exception as e:
         print(e)
         createCompany()
