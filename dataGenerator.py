@@ -100,8 +100,9 @@ def createProduct():
         
         for i in range(random.randint(1,10)):
             try:
-                product.materials.add(material = random.choice(Material.objects.all()), weight = random.uniform(0.1, 1000))
-            except:
+                Component.objects.create(product = product, material = random.choice(Material.objects.all()), weight = random.uniform(0.1, 1000))
+            except Exception as e:
+                print(f"Material error: { e }")
                 pass
             
         for i in range(random.randint(0,3)):
@@ -113,3 +114,4 @@ def createProduct():
     except Exception as e:
         print(e)
         createProduct()
+        
