@@ -3,16 +3,18 @@ from test.dataGenerator import *
 
 def showTestPage(request, createObj = None):
     
+    result = ""
+    
     match createObj:
         case 'company':
-            createCompany()
+            result = "Company: " + createCompany()
         case 'tag':
             createTag()
+            result = "Tag"
         case 'normalUser':
-            createNormalUser()
+            result = "NormalUser: " + createNormalUser()
         case 'product':
-            createProduct()
-        case _:
-            return render(request, 'test/templates/test.html')
+            result = "Product: " + createProduct()
+
+    return render(request, 'test/templates/test.html', {'result': result})
             
-    return redirect('/test')
