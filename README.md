@@ -16,9 +16,8 @@ Bearer token is required
 
 ## add materials with file
 
-![download page](images/image.png)
-
 1. download csv file
+![download page](images/image.png)
 2. create super user
 `$ python manage.py createsuperuser`
 3. go to django admin
