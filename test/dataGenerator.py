@@ -48,6 +48,10 @@ def createNormalUser():
     except Exception as e:
         print(e)
         createNormalUser()
+        
+    result = f"name = {Profile.objects.get(user = user, meta_key = 'name').meta_value}, username = {user.username}"    
+    
+    return result
     
         
 def createCompany():
@@ -61,6 +65,10 @@ def createCompany():
     except Exception as e:
         print(e)
         createCompany()
+        
+    result = f"name = {Profile.objects.get(user = company, meta_key = 'companyName').meta_value}, username = {company.username}"
+    
+    return result
         
         
 def createTag():
@@ -103,5 +111,9 @@ def createProduct():
     except Exception as e:
         print(e)
         createProduct()
+        
+    result = f"name = {product.name}, coe = {product.carbonEmission}"
+        
+    return result
         
         

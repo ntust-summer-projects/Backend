@@ -17,10 +17,15 @@
             <input type = 'button' id = 'btn' value = 'create product', onclick = "showalert('product')">
         </div>
 
+        <div title = "Create Obj">
+
+            <h1>Create: {{ result }}</h1>
+        
+        </div>
+
         <script>
             function showalert(url){
-                alert(url + ' has been created!');
-                location.href += url
+                location.href = '/test/' + url
               }
           </script>
 
