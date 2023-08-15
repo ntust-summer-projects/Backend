@@ -5,17 +5,23 @@
     </head>
     <body>
         <div>
-            <input type = 'button' value = 'create company', onclick = "location.href += 'company'">
+            <input type = 'button' id = 'btn' value = 'create company', onclick = "showalert('company')">
         </div>
         <div>
-            <input type = 'button' value = 'create normalUser', onclick = "location.href += 'normalUser'">
+            <input type = 'button' id = 'btn' value = 'create normalUser', onclick = "showalert('normalUser')">
         </div>
         <div>
-            <input type = 'button' value = 'create tag', onclick = "location.href += 'tag'">
+            <input type = 'button' id = 'btn' value = 'create tag', onclick = "showalert('tag')">
         </div>
         <div>
-            <input type = 'button' value = 'create product', onclick = "location.href += 'product'">
+            <input type = 'button' id = 'btn' value = 'create product', onclick = "showalert('product')">
+            
         </div>
+        <script>
+            function showalert(url){
+                location.href += url
+              }
+          </script>
 
     </body>
 </html>
