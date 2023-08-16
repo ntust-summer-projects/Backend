@@ -24,8 +24,15 @@ class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet):
         tags = self.request.query_params.getlist('tags', None)
         
         queryset = super().get_queryset()
+        
+        if len(tags) == 1:
+            tags = tags[0].split(',')
         for tag in tags:
-            queryset = queryset.filter(tag=tag)
+            try:
+                tag_id = Tag.objects.filter(name=tag)[0]
+            except IndexError:
+                raise ValidationError(f"Invalid tag name {tag}")
+            queryset = queryset.filter(tag=tag_id)
                 
         if search is not None:
             queryset = queryset.filter(name__contains=search)
@@ -39,6 +46,10 @@ class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    
+    def create(self, request, *args, **kwargs):
+        request.data['company'] = request.user.id
+        return super().create(request, *args, **kwargs)
     
     def get_queryset(self):
         return super().get_queryset().filter(company=self.request.user.id)

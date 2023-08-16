@@ -16,10 +16,11 @@ class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     lookup_field = 'id'
     
     def get_queryset(self):
-        try:
-            return User.objects.filter(id=self.request.user.id)
-        except:
+        user_id = self.request.user.id
+        if user_id is None:
             raise ValidationError("You need login first")
+        else:
+            return User.objects.filter(id=self.request.user.id)
     
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -51,11 +52,23 @@ class RegisterViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     authentication_classes = ()
     
     def create(self,request,*args,**kwargs):
+        role = request.data.pop("role", None)
+        if role not in ['COMPANY', "NORMAL"]:
+            raise ValidationError("Invalid Role")
+        profiles = request.data.get('profile', None)
+        if role == "COMPANY":
+            required_profiles = ['companyName', 'address', 'phone', 'vatNumber', 'chairman', 'contactPerson', 'contact1']
+            for p in required_profiles:
+                if profiles.get(p, None) is None:
+                    raise ValidationError(f'profile "{p}" is required')
+        
         serializer = RegistrationSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        data = serializer.data.copy()
+        data.pop('password')
+        return Response(data, status=status.HTTP_201_CREATED)
 
 class LoginViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     queryset = User.objects.all()

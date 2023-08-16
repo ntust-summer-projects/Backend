@@ -8,7 +8,7 @@ router.register('products', views.ReadOnlyProductViewSet)
 router.register('materials', views.MaterialViewSet)
 router.register('user/logs/(?P<type>[^/.]+)', views.LogViewSet)
 router.register('user/products', views.ProductViewSet)
-router.register('tags', views.TagViewSet)
+# router.register('tags', views.TagViewSet)
 
 urlpatterns = [
     path('', include(router.urls))
