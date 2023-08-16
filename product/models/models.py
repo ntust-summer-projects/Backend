@@ -38,6 +38,7 @@ class Product(models.Model):
     materials = models.ManyToManyField(to = 'Material', through = 'Component', related_name = 'products')
     carbonEmission = models.FloatField(editable = False, default = 0.0)
     last_update = models.DateTimeField(editable = False, auto_now_add=True)
+    weight = models.FloatField(default = 0)
     
     def getEmission(self):
         emission = 0.0
@@ -72,6 +73,7 @@ class Product(models.Model):
 class Material(models.Model):
     name = models.CharField(max_length = 50, default = "未知")
     carbonEmission = models.FloatField(default = 0.0)
+    unit = models.CharField(max_length = 50, null = True)
     
     def __str__(self):
         return f"{ self.name }"
@@ -103,17 +105,17 @@ class Transportation(models.Model):
 class Component(models.Model):
     product = models.ForeignKey(to = 'Product', on_delete=models.CASCADE, default = 1)
     material = models.ForeignKey(to = 'Material', on_delete=models.CASCADE, default = 1)
-    weight = models.FloatField(default = 0.0)
+    quantity = models.FloatField(default = 0.0)
     carbonEmission = models.FloatField(editable = False, default = 0.0)
     
     class Meta:
         unique_together = ['product', 'material']
     
     def __str__(self):
-        return f"{ self.material } { self.weight }"
+        return f"{ self.material } { self.quantity }"
     
     def getEmission(self):
-        return self.weight * self.material.carbonEmission
+        return self.quantity * self.material.carbonEmission
     
     def save(self, *args, **kwargs):
         self.carbonEmission = self.getEmission()
@@ -133,6 +135,7 @@ class UploadMaterial(models.Model):
     file = models.FileField(upload_to = 'uploads/%Y/%m/%d/')
     nameField = models.CharField(max_length = 50, default = 'name')
     coeField = models.CharField(max_length = 50, default = 'coe')
+    unitField = models.CharField(max_length = 50, default = 'unit')
     dateTime = models.DateTimeField(auto_now = True)
 
     def save(self, *args, **kwargs):
@@ -170,19 +173,19 @@ def updateMaterial(sender, instance, created, **kwargs):
     
     def updateOrCreateMaterial(data):
         for index, row in data.iterrows():
-            Material.objects.update_or_create({ 'name': row[instance.nameField], 'carbonEmission': float(row[instance.coeField]), }, name = row[instance.nameField])
+            Material.objects.update_or_create({ 'name': row[instance.nameField], 'carbonEmission': float(row[instance.coeField]), 'unit': row[instance.unitField]}, name = row[instance.nameField])
     
     if "XML" in fileType:
         tree = ET.parse(instance.file.path)
         root = tree.getroot()
         for material in root:
-            Material.objects.update_or_create({ 'name': material.find(instance.nameField).text, 'carbonEmission': float(material.find(instance.coeField).text), }, name = material.find(instance.nameField).text)
+            Material.objects.update_or_create({ 'name': material.find(instance.nameField).text, 'carbonEmission': float(material.find(instance.coeField).text), 'unit': material.find(instance.unitField).text}, name = material.find(instance.nameField).text)
     elif "Excel" in fileType:
-        excel_sheet = pd.read_excel(instance.file.path, sheet_name = None, usecols = [instance.nameField, instance.coeField])
+        excel_sheet = pd.read_excel(instance.file.path, sheet_name = None, usecols = [instance.nameField, instance.coeField, instance.unitField])
         for sheet_name, sheet_data in excel_sheet.items():
             updateOrCreateMaterial(sheet_data)
     elif "CSV" in fileType:
-        csv = pd.read_csv(instance.file.path, usecols = [instance.nameField, instance.coeField])
+        csv = pd.read_csv(instance.file.path, usecols = [instance.nameField, instance.coeField, instance.unitField])
         updateOrCreateMaterial(csv)
     else:
         try:
@@ -192,4 +195,4 @@ def updateMaterial(sender, instance, created, **kwargs):
             file = codecs.open(instance.file.path, 'r', 'utf_8_sig')
             data = json.load(file)
             for row in data:
-                Material.objects.update_or_create({ 'name': row[instance.nameField], 'carbonEmission': float(row[instance.coeField]), }, name = row[instance.nameField])
+                Material.objects.update_or_create({ 'name': row[instance.nameField], 'carbonEmission': float(row[instance.coeField]), 'unit': row[instance.unitField]}, name = row[instance.nameField])
