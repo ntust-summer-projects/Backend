@@ -5,6 +5,43 @@ from docs.product_views_docs import *
 from .serializers import *
 from ..models import *
 
+
+class SearchModelMixin(object):
+
+    def search(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        company = request.GET.get('company', None)
+
+        if company and company != '':
+            queryset = queryset.filter(company = company)
+            
+        productName = request.GET.get('product', None)
+
+        if productName and productName != '':
+            queryset = queryset.filter(name__contains = productName)
+
+        materialName = request.GET.get('material', None)
+
+        if materialName and materialName != '':
+            queryset = queryset.filter(name__contains = materialName)
+
+        tags = request.query_params.getlist('tags', None)
+
+        for tag in tags:
+            queryset = queryset.filter(tag = tag)
+
+        page = self.paginate_queryset(queryset)
+
+        if page :
+            serializer = self.get_serializer(page, many = True)
+            
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many = True)
+        
+        return Response(serializer.data)
+
+
 @readonlyproduct_viewset_doc_list
 @readonlyproduct_viewset_doc_retrieve
 class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet): 
@@ -30,6 +67,7 @@ class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet):
         if search is not None:
             queryset = queryset.filter(name__contains=search)
         return queryset[offset: offset+size]
+    
     
         
 @companyproduct_viewset_doc_list
