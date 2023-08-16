@@ -15,6 +15,8 @@ def showTestPage(request, createObj = None):
             result = "NormalUser: " + createNormalUser()
         case 'product':
             result = "Product: " + createProduct()
+        case 'announcement':
+            result = 'Announcement: ' + createAnnouncement()
 
     return render(request, 'test/templates/test.html', {'result': result})
             
