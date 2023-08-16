@@ -2,6 +2,7 @@ from general.models import *
 from product.models import *
 import random
 from faker import Faker
+from test.Bullshit import Bullshit
 
 fake = Faker(locale='zh_TW')
 
@@ -115,5 +116,18 @@ def createProduct():
     result = f"name = {product.name}, coe = {product.carbonEmission}"
         
     return result
+
+def createAnnouncement():
+    topic = fake.word()
+    length = random.randint(50,200)
+    obj = Bullshit()
+    announcement = Announcement.objects.create(title = topic, context = obj.generate(topic, length))
+    
+    result = f'title = { announcement.title }, context = { announcement.context }'
+    
+    return result
+    
+    
+
         
         
