@@ -52,4 +52,5 @@ class Announcement(models.Model):
     upload_date = models.DateTimeField(default=timezone.now)
     edit_date = models.DateTimeField(auto_now=True)
     context = models.TextField()
+    isImportment = models.BooleanField(default = False)
 
