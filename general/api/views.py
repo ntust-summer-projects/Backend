@@ -103,12 +103,10 @@ class LoginViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         
         response = Response(status=status.HTTP_200_OK)
         
-        response.set_cookie(key='jwt',value=str(token),httponly=True)
         
         response.data = {
             'refresh':str(refresh),
-            'access':str(token),
-            'email':user.email
+            'access':str(token)
         }
         return response
 
@@ -118,7 +116,6 @@ class LogoutViewset(views.APIView):
     
     def get(self,request):
         response=Response()
-        response.delete_cookie('jwt')
         response.data = {
             'message': 'success'
         }
