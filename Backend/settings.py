@@ -208,3 +208,6 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
+
+EMAIL_HOST_USER = 'emailverify813024@gmail.com'
+EMAIL_HOST_PASSWORD = 'ypxmmwshavsppnkn'

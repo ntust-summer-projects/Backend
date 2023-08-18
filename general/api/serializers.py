@@ -100,3 +100,8 @@ class LogoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', )
+        
+class PasswordForgorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username','email']
