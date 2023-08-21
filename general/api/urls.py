@@ -13,6 +13,7 @@ router.register('announcements', views.AnnouncementViewSet)
 router.register('register',views.RegisterViewSet, basename='user-register')
 router.register('login',views.LoginViewSet, basename='user-login')
 
+
 urlpatterns = [
     path('', include(router.urls)),
     # path('', include(user_log_router.urls)),

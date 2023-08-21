@@ -54,3 +54,7 @@ class Announcement(models.Model):
     context = models.TextField()
     isImportment = models.BooleanField(default = False)
 
+class FindPasswordRecord(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    token = models.CharField(max_length=255)
+    isExpiried = models.BooleanField(default=False)
