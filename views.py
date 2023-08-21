@@ -159,10 +159,10 @@ class PasswordForgor(viewsets.GenericViewSet,mixins.CreateModelMixin):
         }
         return response
 
-    def partial_update(self,request):
-
-        new_password = request.data[new_password]
-        token = request.data[token]
+    def partial_update(self,request,pk=None):
+        new_password=None
+        new_password = request.data.get(new_password)
+        token = request.data.get(token)
         instance = FindPasswordRecord.objects.get(token=token)
         
         if instance.isExpiried:
