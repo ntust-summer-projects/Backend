@@ -1,13 +1,24 @@
 from rest_framework import viewsets, status, mixins, views
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserSerializer, AnnouncementSerializer,RegistrationSerializer,LoginSerializer
-from ..models import User, Announcement
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from .serializers import *
+from ..models import User, Announcement, FindPasswordRecord
 from product.models import *
 from product.api.serializers import *
 from docs.general_views_docs import *
 
+
+import smtplib
+from django.conf import settings
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from django.template import Template, Context
+from pathlib import Path
 
 @user_viewset_list_doc
 class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
@@ -16,10 +27,11 @@ class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
     lookup_field = 'id'
     
     def get_queryset(self):
-        try:
-            return User.objects.filter(id=self.request.user.id)
-        except:
+        user_id = self.request.user.id
+        if user_id is None:
             raise ValidationError("You need login first")
+        else:
+            return User.objects.filter(id=self.request.user.id)
     
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -51,11 +63,25 @@ class RegisterViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     authentication_classes = ()
     
     def create(self,request,*args,**kwargs):
+        role = request.data.get("role", None)
+        if role not in ['COMPANY', "NORMAL"]:
+            raise ValidationError("Invalid Role")
+        profiles = request.data.get('profile', None)
+        if role == "COMPANY":
+            if profiles is None:
+                raise ValidationError("Profile is required")
+            required_profiles = ['companyName', 'address', 'phone', 'vatNumber', 'chairman', 'contactPerson', 'contact1']
+            for p in required_profiles:
+                if profiles.get(p, None) is None:
+                    raise ValidationError(f'profile "{p}" is required')
+        
         serializer = RegistrationSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        data = serializer.data.copy()
+        data.pop('password')
+        return Response(data, status=status.HTTP_201_CREATED)
 
 class LoginViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     queryset = User.objects.all()
@@ -80,25 +106,102 @@ class LoginViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         
         response = Response(status=status.HTTP_200_OK)
         
-        response.set_cookie(key='jwt',value=str(token),httponly=True)
         
         response.data = {
             'refresh':str(refresh),
-            'access':str(token),
-            'email':user.email
+            'access':str(token)
         }
         return response
 
 class LogoutViewset(views.APIView):
-    permission_classes = ()
-    authentication_classes = ()
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     
     def get(self,request):
         response=Response()
-        response.delete_cookie('jwt')
         response.data = {
             'message': 'success'
         }
         
         return response
+
+@passwordforgot_vieswet_create_doc
+@passwordforgot_vieswet_reset_doc
+class PasswordForgot(viewsets.GenericViewSet, mixins.CreateModelMixin):
+    queryset = User.objects.all()
+    serializer_class = PasswordForgotSerializer
+    permission_classes = ()
+    authentication_classes = ()
     
+    def create(self,request):
+
+        username = request.data['username']
+        email = request.data['email']
+        try:
+            user = User.objects.get(username=username)
+        except:
+            return Response('User not found!',status=status.HTTP_400_BAD_REQUEST)
+        
+        if not user.email == email:
+            return Response('Incorrect email!',status=status.HTTP_400_BAD_REQUEST)
+
+        tokenGenerator = PasswordResetTokenGenerator()
+        token = tokenGenerator.make_token(user)
+        
+        FindPasswordRecord.objects.create(user=user,token=token)
+        # FindPasswordRecord.save()
+
+        url = f"http://{request.get_host()}/api/reset-password/{token}/"
+
+        SendEmail(email,url)
+
+        response = Response()
+        response.data = {
+            'message':'email send successfully' ,
+    
+        }
+        return response
+
+    @action(detail=False, methods=['post'], url_path="(?P<token>[^/.]+)")
+    def reset_with_token(self, request, token=None):
+        new_password = request.data['new_password']
+        
+        try:
+            instance = FindPasswordRecord.objects.get(token=token)
+        except:
+            return Response({'message': 'Invalid token'})
+        
+        if instance.isExpiried:
+            return Response({'message': 'token expiried'})
+        
+        user = instance.user
+        user.set_password(new_password)
+        user.save()
+
+        instance.isExpiried = True
+        instance.save()
+
+        return Response({'message': 'Password reset successfully'})
+
+
+
+def SendEmail(receiver,url):
+    content = MIMEMultipart() 
+    content["subject"] = "Reset your password"  
+    content["from"] = settings.EMAIL_HOST_USER  
+    content["to"] = receiver 
+    
+    template = Template(Path("test/templates/email.html").read_text())
+    context = Context({'verifyUrl': url})
+    body = template.render(context)
+    content.attach(MIMEText(body, 'html'))  
+    
+    with smtplib.SMTP(host="smtp.gmail.com", port="587") as smtp:  
+        try:
+            smtp.ehlo()  
+            smtp.starttls()  
+            smtp.login(settings.EMAIL_HOST_USER , settings.EMAIL_HOST_PASSWORD) 
+            smtp.send_message(content)  
+            print("Complete!")
+        except Exception as e:
+            print("Error message: ", e)

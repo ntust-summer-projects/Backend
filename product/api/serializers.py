@@ -54,10 +54,15 @@ class ProductSerializer(serializers.ModelSerializer):
         
     def create(self, validated_data):
         components = validated_data.pop('get_component')
+        
         product = super().create(validated_data)
         materials_id = []
         for component in components:
             material_id = component['material_id']
+            try:
+                Material.objects.get(id=material_id)
+            except:
+                raise ValidationError(f"Invalid Material ID {material_id}")
             if material_id in materials_id:
                 raise ValidationError("You can't have components with the same material id.")
             materials_id.append(material_id)
@@ -74,7 +79,6 @@ class ProductSerializer(serializers.ModelSerializer):
             om_ids = [oc.material_id for oc in oringinal_components]
             for component in components:
                 weight, material_id = component.get('weight', None), component.get('material_id', None)
-                
                 if weight is None or material_id is None:
                     raise ValidationError("You need provide both material_id and weight")
                 try:
@@ -96,7 +100,31 @@ class ProductSerializer(serializers.ModelSerializer):
                 
         return super().update(instance, validated_data)
 
-
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        
+        tags = []
+        for tag_id in data.pop('tag'):
+            tag_obj = Tag.objects.get(id=tag_id)
+            tags.append(tag_obj.name)
+        data['tags'] = tags
+        return data
+    
+    def to_internal_value(self, data):
+        tags_string = data.pop('tags', None)
+        tags_id = []
+        for tag in tags_string:
+            # try:
+            #     id = Tag.objects.filter(name=tag)[0].id
+            #     tags_id.append(id)
+            # except:
+            #     raise ValidationError({"tags": f'Invalid tag name "{tag}"'})
+            id = Tag.objects.get_or_create(name=tag)[0].id
+            tags_id.append(id)
+        
+        data['tag'] = tags_id
+        return super().to_internal_value(data)
+        
 class LogSerializer(serializers.ModelSerializer):
     class Meta:
         model = AbstractLog

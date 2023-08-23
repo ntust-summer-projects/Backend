@@ -102,27 +102,35 @@ log_viewset_doc_create = method_decorator(name='create', decorator=swagger_auto_
     operation_summary="Create new log of a certain type"
 ))
 
+serarch_parameters = [
+    openapi.Parameter(
+        name='search',
+        in_=openapi.IN_QUERY,
+        description='Query keyword',
+        type=openapi.TYPE_STRING
+    ),
+    openapi.Parameter(
+        name='offset',
+        in_=openapi.IN_QUERY,
+        description='Offset for search results<br/>Default: 0',
+        type=openapi.TYPE_INTEGER
+    ),
+    openapi.Parameter(
+        name='size',
+        in_=openapi.IN_QUERY,
+        description='The maximum number of search results<br/>Default: 10',
+        type=openapi.TYPE_INTEGER
+    )
+]
 
 readonlyproduct_viewset_doc_list = method_decorator(name='list', decorator=swagger_auto_schema(
     operation_summary='Get all products list (search)',
-    manual_parameters=[
+    manual_parameters= serarch_parameters + [
         openapi.Parameter(
-            name='search',
+            name='tags',
             in_=openapi.IN_QUERY,
-            description='Query keyword',
-            type=openapi.TYPE_STRING
-        ),
-        openapi.Parameter(
-            name='offset',
-            in_=openapi.IN_QUERY,
-            description='Offset for search results<br/>Default: 0',
-            type=openapi.TYPE_INTEGER
-        ),
-        openapi.Parameter(
-            name='size',
-            in_=openapi.IN_QUERY,
-            description='The maximum number of search results<br/>Default: 10',
-            type=openapi.TYPE_INTEGER
+            type=openapi.TYPE_ARRAY,
+            items=openapi.Items(type=openapi.TYPE_STRING)
         )
     ]
 ))
@@ -131,8 +139,21 @@ readonlyproduct_viewset_doc_retrieve = method_decorator(name='retrieve', decorat
     operation_summary='Get certain product by ID'
 ))
 
+material_viewset_doc_list = method_decorator(name='list', decorator=swagger_auto_schema(
+    operation_summary='Get all materials (search)',
+    manual_parameters= [serarch_parameters[0]]
+))
+
 companyproduct_viewset_doc_list = method_decorator(name='list', decorator=swagger_auto_schema(
-    operation_summary='Get current company\'s product list'
+    operation_summary='Get current company\'s product list',
+    manual_parameters= serarch_parameters + [
+        openapi.Parameter(
+            name='tags',
+            in_=openapi.IN_QUERY,
+            type=openapi.TYPE_ARRAY,
+            items=openapi.Items(type=openapi.TYPE_STRING)
+        )
+    ]
 ))
 
 from rest_framework import serializers
@@ -147,7 +168,6 @@ product_request_body = openapi.Schema(
     properties={
         'name': openapi.Schema(
             type=openapi.TYPE_STRING,
-            format=openapi.FORMAT_DATETIME,
             example='Motor'
         ),
         'number': openapi.Schema(
@@ -155,23 +175,23 @@ product_request_body = openapi.Schema(
             description='Product\'s serial number',
             example='00183758'
         ),
-        'tag': openapi.Schema(
+        'tags': openapi.Schema(
             type=openapi.TYPE_ARRAY,
-            description='Array of tag id',
-            items=openapi.Items(type=openapi.TYPE_INTEGER),
-            example=[1, 2]
+            description='Array of tag name',
+            items=openapi.Items(type=openapi.TYPE_STRING),
+            example=['Drink', 'Sweet']
         ),
         'components': openapi.Schema(
             type=openapi.TYPE_ARRAY,
-            description='Array of the materials and weights of this product',
+            description='Array of the materials and weight of this product',
             items=openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
                     'material_id': openapi.Schema(type=openapi.TYPE_INTEGER),
-                    'weights': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT),
+                    'weight': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT),
                 },
             ),
-            examples={'material_id':3, 'weights':38.2}
+            examples={'material_id':3, 'weight':38.2}
         )
     }
 )

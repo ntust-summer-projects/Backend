@@ -50,22 +50,49 @@ class AnnouncementSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class RegistrationSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer(many=True, required=False)
     class Meta:
         model = User
-        fields = ['username','password','email','role']
+        fields = ['username','password','email','role', 'profile']
+        required = ['username', 'password', 'email', 'role']
         
     extra_kwargs = {
         'password' : {'write_only': True}
     }
     
     def create(self, validated_data):
+        
         password = validated_data.pop('password', None)
         user = User(**validated_data)
         if password:
             user.set_password(password)
-        
         user.save()
+        
+        profile_data = validated_data.pop('profile', None)
+        if profile_data is not None:
+            for item in profile_data:
+                item['user'] = user
+                Profile.objects.create(**item)
         return user
+    
+    
+    def to_internal_value(self, data):
+        profile_data = data.pop('profile', None)
+        if profile_data is not None:
+            data['profile'] = [{'meta_key': key, 'meta_value':value} for key, value in profile_data.items()]
+        return super().to_internal_value(data)
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        profiles = data.pop('profile', None)
+        if profiles is not None:
+            temp = {}
+            for profile in profiles:
+                key = profile['meta_key']
+                value = profile['meta_value']
+                temp[key] = value
+            data['profile'] = temp
+        return data
     
 class LoginSerializer(serializers.ModelSerializer):
     class Meta:
@@ -75,4 +102,8 @@ class LoginSerializer(serializers.ModelSerializer):
 class LogoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', )
+        
+class PasswordForgotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username','email']

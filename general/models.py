@@ -15,29 +15,29 @@ class User(AbstractUser):
     def get_profile(self):
         return Profile.objects.all().filter(user=self.id)
  
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created and instance.role == "ADMIN" or instance.role == 'Admin':
-        Profile.objects.bulk_create(
-            [Profile(user=instance,meta_key="name"),
-             Profile(user=instance,meta_key="phone"),
-             Profile(user=instance,meta_key="IsAdmin",meta_value="true")]
-            ) 
-    elif created and instance.role == "NORMAL" or instance.role == 'Normal':
-        Profile.objects.bulk_create(
-            [Profile(user=instance,meta_key="name"),
-             Profile(user=instance,meta_key="phone"),
-             Profile(user=instance,meta_key="wallet",meta_value=0),
-             Profile(user=instance,meta_key="carbonProduce",meta_value=0.0000)]
-            ) 
-    elif created and instance.role == "COMPANY" or instance.role == 'Company':
-        Profile.objects.bulk_create(
-            [Profile(user=instance,meta_key="companyName"),
-             Profile(user=instance,meta_key="phone"),
-             Profile(user=instance,meta_key="address"),
-             Profile(user=instance,meta_key="vatNumber"),
-             Profile(user=instance,meta_key="chairman")]
-            )
+# @receiver(post_save, sender=User)
+# def create_user_profile(sender, instance, created, **kwargs):
+#     if created and instance.role == "ADMIN" or instance.role == 'Admin':
+#         Profile.objects.bulk_create(
+#             [Profile(user=instance,meta_key="name"),
+#              Profile(user=instance,meta_key="phone"),
+#              Profile(user=instance,meta_key="IsAdmin",meta_value="true")]
+#             ) 
+#     elif created and instance.role == "NORMAL" or instance.role == 'Normal':
+#         Profile.objects.bulk_create(
+#             [Profile(user=instance,meta_key="name"),
+#              Profile(user=instance,meta_key="phone"),
+#              Profile(user=instance,meta_key="wallet",meta_value=0),
+#              Profile(user=instance,meta_key="carbonProduce",meta_value=0.0000)]
+#             ) 
+#     elif created and instance.role == "COMPANY" or instance.role == 'Company':
+#         Profile.objects.bulk_create(
+#             [Profile(user=instance,meta_key="companyName"),
+#              Profile(user=instance,meta_key="phone"),
+#              Profile(user=instance,meta_key="address"),
+#              Profile(user=instance,meta_key="vatNumber"),
+#              Profile(user=instance,meta_key="chairman")]
+#             )
  
 class Profile(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
@@ -54,3 +54,7 @@ class Announcement(models.Model):
     context = models.TextField()
     isImportment = models.BooleanField(default = False)
 
+class FindPasswordRecord(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    token = models.CharField(max_length=255)
+    isExpiried = models.BooleanField(default=False)

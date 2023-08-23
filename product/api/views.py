@@ -5,41 +5,6 @@ from docs.product_views_docs import *
 from .serializers import *
 from ..models import *
 
-'''
-class SearchModelMixin(object):
-
-    def search(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        company = request.GET.get('company', None)
-
-        if company and company != '':
-            queryset = queryset.filter(company = company)
-            
-        productName = request.GET.get('product', None)
-
-        if productName and productName != '':
-            queryset = queryset.filter(name__contains = productName)
-
-        materialName = request.GET.get('material', None)
-
-        if materialName and materialName != '':
-            queryset = queryset.filter(name__contains = materialName)
-
-        tags = request.query_params.getlist('tags', None)
-
-        for tag in tags:
-            queryset = queryset.filter(tag = tag)
-
-        page = self.paginate_queryset(queryset)
-
-        if page :
-            serializer = self.get_serializer(page, many = True)
-            
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many = True)
-        
-        return Response(serializer.data)'''
 
 
 @readonlyproduct_viewset_doc_list
@@ -61,8 +26,15 @@ class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet):
         tags = self.request.query_params.getlist('tags', None)
         
         queryset = super().get_queryset()
+        
+        if len(tags) == 1:
+            tags = tags[0].split(',')
         for tag in tags:
-            queryset = queryset.filter(tag=tag)
+            try:
+                tag_id = Tag.objects.filter(name=tag)[0]
+            except IndexError:
+                raise ValidationError(f"Invalid tag name {tag}")
+            queryset = queryset.filter(tag=tag_id)
                 
         if search is not None:
             queryset = queryset.filter(name__contains=search)
@@ -78,16 +50,53 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     
+    def create(self, request, *args, **kwargs):
+        request.data['company'] = request.user.id
+        return super().create(request, *args, **kwargs)
+    
     def get_queryset(self):
-        return super().get_queryset().filter(company=self.request.user.id)
+        queryset = super().get_queryset().filter(company=self.request.user.id)
+    
+        search = self.request.GET.get('search', None)
+        try:
+            offset = int(self.request.GET.get('offset', 0))
+        except ValueError:
+            raise ValidationError({"offset":'must be integer'})
+        try:
+            size = int(self.request.GET.get('size', 10))
+        except ValueError:
+            raise ValidationError({"size":'must be integer'})
+        tags = self.request.query_params.getlist('tags', None)
+        
+        if len(tags) == 1:
+            tags = tags[0].split(',')
+        for tag in tags:
+            try:
+                tag_id = Tag.objects.filter(name=tag)[0]
+            except IndexError:
+                raise ValidationError(f"Invalid tag name {tag}")
+            queryset = queryset.filter(tag=tag_id)
+                
+        if search is not None:
+            queryset = queryset.filter(name__contains=search)
+        return queryset[offset: offset+size]
     
     @swagger_auto_schema(auto_schema=None)
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
 
+@material_viewset_doc_list
 class MaterialViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Material.objects.all()
     serializer_class = MaterialSerializer
+
+    def get_queryset(self):
+        search = self.request.GET.get('search', None)        
+        queryset = super().get_queryset()
+                
+        if search is not None:
+            queryset = queryset.filter(name__contains=search)
+        return queryset
 
 @log_viewset_doc_list
 @log_viewset_doc_retrieve
