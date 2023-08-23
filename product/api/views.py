@@ -5,7 +5,7 @@ from docs.product_views_docs import *
 from .serializers import *
 from ..models import *
 
-
+'''
 class SearchModelMixin(object):
 
     def search(self, request, *args, **kwargs):
@@ -39,7 +39,7 @@ class SearchModelMixin(object):
 
         serializer = self.get_serializer(queryset, many = True)
         
-        return Response(serializer.data)
+        return Response(serializer.data)'''
 
 
 @readonlyproduct_viewset_doc_list
