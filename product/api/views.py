@@ -40,6 +40,7 @@ class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(name__contains=search)
         return queryset[offset: offset+size]
     
+    
         
 @companyproduct_viewset_doc_list
 @companyproduct_viewset_doc_create
