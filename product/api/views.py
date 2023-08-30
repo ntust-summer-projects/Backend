@@ -156,7 +156,7 @@ class LogTypeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return AbstractLog.objects.filter(logtype=self.kwargs['log_type_pk'])
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
