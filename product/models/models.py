@@ -64,7 +64,7 @@ class Product(models.Model):
 
     def get_log(self):
         return LogEntry.objects.filter(Q(content_type = ContentType.objects.get_for_model(self), object_id = self.pk) |
-                                       Q(content_type = ContentType.objects.get_for_model(Component), serialized_data__fields__product = self.pk))
+                                       Q(content_type = ContentType.objects.get_for_model(Component), serialized_data__fields__product = self.pk)).filter(Q(action=1)|Q(action=2))
         
     def get_component(self):
         return Component.objects.filter(product_id=self.id)

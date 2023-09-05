@@ -47,6 +47,10 @@ class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet):
         
         queryset = queryset[offset: offset+size]
         serializer = self.get_serializer(queryset, many=True)
+        
+        for data in serializer.data:
+            data.pop("logs", None)    
+        
         return Response(serializer.data)
         
 @companyproduct_viewset_doc_list
@@ -96,6 +100,10 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
         
         queryset = queryset[offset: offset+size]
         serializer = self.get_serializer(queryset, many=True)
+        
+        for data in serializer.data:
+            data.pop("logs", None)   
+            
         return Response(serializer.data)
     
     @swagger_auto_schema(auto_schema=None)
