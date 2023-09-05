@@ -61,6 +61,9 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     
+    def get_queryset(self):
+        return super().get_queryset().filter(company=self.request.user.id)
+    
     def create(self, request, *args, **kwargs):
         request.data['company'] = request.user.id
         return super().create(request, *args, **kwargs)
@@ -84,7 +87,6 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
             raise ValidationError({"size":'must be integer'})
         tags = self.request.query_params.getlist('tags', None)
         
-        queryset = super().get_queryset()
         if tags is not None:
             if len(tags) == 1:
                 tags = tags[0].split(',')
