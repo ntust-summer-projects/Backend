@@ -111,7 +111,21 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
     @swagger_auto_schema(auto_schema=None)
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
-
+    
+    @action(detail=False, methods=['get'])
+    def deleted(self, request):
+        queryset = LogEntry.objects.filter(content_type = ContentType.objects.get_for_model(Product)).filter(Q(action=2))
+        
+        
+        serializer = ProductLogSerializer(queryset, many=True)
+        temp = []
+        for data in serializer.data:
+            changes = json.loads(data['changes'])
+            if changes['company'][0] == request.user.username:
+                temp.append(data)
+        
+        return Response(temp)
+    
 @material_viewset_doc_list
 class MaterialViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Material.objects.all()
