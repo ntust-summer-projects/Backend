@@ -17,6 +17,7 @@ router.register('reset-password',views.PasswordForgot, basename='reset-password'
 
 urlpatterns = [
     path('', include(router.urls)),
+    path(r'user', views.user_update, name='user_update'),
     # path('', include(user_log_router.urls)),
-    path(r'logout', views.LogoutViewset.as_view(), name='user-logout')
+    path(r'logout/', views.LogoutViewset.as_view(), name='user-logout')
 ]

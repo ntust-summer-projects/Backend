@@ -16,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(many=True, source='get_profile')
     class Meta:
         model = User
-        fields = ('id', 'username', 'profile', 'last_login', 'role', 'date_joined')
+        fields = ('id', 'username', 'profile', 'last_login', 'role', 'date_joined', 'email', 'password')
         depth = 1
     
     def create(self, validated_data):
@@ -26,7 +26,25 @@ class UserSerializer(serializers.ModelSerializer):
             item['user'] = user
             Profile.objects.create(**item)
         return user
-        
+    
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop('get_profile')
+        original_profile = Profile.objects.filter(user=instance.id)
+        if validated_data.pop('username', False) != instance.username:
+            raise ValidationError("username should not be changed")
+        for item in profile_data:
+            key = item['meta_key']
+            profile = original_profile.filter(meta_key=key)
+            try:
+                profile[0]
+            except:
+                raise ValidationError(f'Invalid profile key "{key}"')
+            profile.update(meta_value=item['meta_value'])
+        password = validated_data.pop('password', None)
+        if password is not None:
+            instance.set_password(password)
+        return super().update(instance, validated_data)
+    
     def to_internal_value(self, data):
         profile_data = data.pop('profile')
         data['profile'] = [{'meta_key': key, 'meta_value':value} for key, value in profile_data.items()]
@@ -34,6 +52,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        data.pop('password', None)
         profiles = data.pop('profile')
         temp = {}
         for profile in profiles:
