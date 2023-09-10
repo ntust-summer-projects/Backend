@@ -47,6 +47,10 @@ class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet):
         
         queryset = queryset[offset: offset+size]
         serializer = self.get_serializer(queryset, many=True)
+        
+        for data in serializer.data:
+            data.pop("logs", None)    
+        
         return Response(serializer.data)
         
 @companyproduct_viewset_doc_list
@@ -56,6 +60,9 @@ class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    
+    def get_queryset(self):
+        return super().get_queryset().filter(company=self.request.user.id)
     
     def create(self, request, *args, **kwargs):
         request.data['company'] = request.user.id
@@ -80,7 +87,6 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
             raise ValidationError({"size":'must be integer'})
         tags = self.request.query_params.getlist('tags', None)
         
-        queryset = super().get_queryset()
         if tags is not None:
             if len(tags) == 1:
                 tags = tags[0].split(',')
@@ -96,12 +102,30 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
         
         queryset = queryset[offset: offset+size]
         serializer = self.get_serializer(queryset, many=True)
+        
+        for data in serializer.data:
+            data.pop("logs", None)   
+            
         return Response(serializer.data)
     
     @swagger_auto_schema(auto_schema=None)
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
-
+    
+    @action(detail=False, methods=['get'])
+    def deleted(self, request):
+        queryset = LogEntry.objects.filter(content_type = ContentType.objects.get_for_model(Product)).filter(Q(action=2))
+        
+        
+        serializer = ProductLogSerializer(queryset, many=True)
+        temp = []
+        for data in serializer.data:
+            changes = json.loads(data['changes'])
+            if changes['company'][0] == request.user.username:
+                temp.append(data)
+        
+        return Response(temp)
+    
 @material_viewset_doc_list
 class MaterialViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Material.objects.all()

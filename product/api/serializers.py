@@ -26,8 +26,8 @@ class ComponentSerializer(serializers.ModelSerializer):
 class ProductLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = LogEntry
-        # fields = '__all__'
-        exclude = ('additional_data', 'content_type')
+        fields = ('id', 'changes', 'timestamp', 'action')
+        # exclude = ('additional_data', 'content_type')
         depth = 0
         
     def to_representation(self, instance):
@@ -35,10 +35,8 @@ class ProductLogSerializer(serializers.ModelSerializer):
         action_id = data.pop('action')
         action_dict = ['CREATE', 'UPDATE', 'DELETE', 'ACCESS']
         data['action'] = action_dict[action_id]
+        
         return data
-    
-    def to_internal_value(self, data):
-        return super().to_internal_value(data)
         
     
 

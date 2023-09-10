@@ -1,7 +1,6 @@
 from rest_framework import viewsets, status, mixins, views
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -42,6 +41,26 @@ class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset[0], many=False)
         return Response(serializer.data)
+
+
+@user_update_doc
+@api_view(['PUT'])
+def user_update(request):
+    instance = request.user
+    
+    if instance.id is None:
+        raise ValidationError("You need login first")
+    
+    serializer = UserSerializer(instance, data=request.data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    if getattr(instance, '_prefetched_objects_cache', None):
+        # If 'prefetch_related' has been applied to a queryset, we need to
+        # forcibly invalidate the prefetch cache on the instance.
+        instance._prefetched_objects_cache = {}
+
+    return Response(serializer.data)
     
 # TODO: profile amount
 class UserLogViewSet(viewsets.ModelViewSet):

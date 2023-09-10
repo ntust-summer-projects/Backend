@@ -211,3 +211,7 @@ SIMPLE_JWT = {
 
 EMAIL_HOST_USER = 'emailverify813024@gmail.com'
 EMAIL_HOST_PASSWORD = 'ypxmmwshavsppnkn'
+
+# AUDITLOG_EXCLUDE_TRACKING_FIELDS = (
+#     "last_update",
+# )

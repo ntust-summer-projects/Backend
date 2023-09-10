@@ -75,3 +75,52 @@ passwordforgot_vieswet_create_doc = method_decorator(name='create', decorator=sw
     operation_summary="Send email to reset password",
     tags=['reset-password']
 ))
+
+user_update_doc = swagger_auto_schema(
+    operation_summary="Update user's information",
+    tags=['user'],
+    method='PUT',
+    request_body=openapi.Schema(
+    title='User',
+    type=openapi.TYPE_OBJECT,
+    required=['name', 'password'],
+    properties={
+        'username': openapi.Schema(
+            type=openapi.TYPE_STRING
+        ),
+        'password': openapi.Schema(
+            type=openapi.TYPE_STRING
+        ),
+        'email': openapi.Schema(
+            type=openapi.TYPE_STRING,
+            format=openapi.FORMAT_EMAIL,
+        ),
+        'profile': openapi.Schema(
+            description="Only required if the role is COMPANY",
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'companyName': openapi.Schema(
+                    type=openapi.TYPE_STRING
+                ),
+                'address': openapi.Schema(
+                    type=openapi.TYPE_STRING
+                ),
+                'phone': openapi.Schema(
+                    type=openapi.TYPE_STRING
+                ),
+                'vatNumber': openapi.Schema(
+                    type=openapi.TYPE_STRING
+                ),
+                'chairman': openapi.Schema(
+                    type=openapi.TYPE_STRING
+                ),
+                'contactPerson': openapi.Schema(
+                    type=openapi.TYPE_STRING
+                ),
+                'contact1': openapi.Schema(
+                    type=openapi.TYPE_STRING
+                ),
+            }
+        )
+    }
+))
