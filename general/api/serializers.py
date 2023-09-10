@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from general.models import User, Profile, Announcement
 from rest_framework.exceptions import ValidationError
+from rest_framework_recaptcha import ReCaptchaField
+
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -118,6 +121,8 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return data
     
 class LoginSerializer(serializers.ModelSerializer):
+    recaptcha = ReCaptchaField()
+    
     class Meta:
         model = User
         fields = ['username','password']
