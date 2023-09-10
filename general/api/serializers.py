@@ -16,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(many=True, source='get_profile')
     class Meta:
         model = User
-        fields = ('id', 'username', 'profile', 'last_login', 'role', 'date_joined', 'email', 'password')
+        fields = ('id', 'username', 'profile', 'last_login', 'role', 'date_joined', 'email')
         depth = 1
     
     def create(self, validated_data):
@@ -48,7 +48,11 @@ class UserSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         profile_data = data.pop('profile')
         data['profile'] = [{'meta_key': key, 'meta_value':value} for key, value in profile_data.items()]
-        return super().to_internal_value(data)
+        validated_data = super().to_internal_value(data)
+        password = data.pop('password', None)
+        if password is not None:
+            validated_data['password'] = password
+        return validated_data
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
