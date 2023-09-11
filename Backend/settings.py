@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    "captcha",
 ]
 
 MIDDLEWARE = [
@@ -211,6 +212,11 @@ SIMPLE_JWT = {
 
 EMAIL_HOST_USER = 'emailverify813024@gmail.com'
 EMAIL_HOST_PASSWORD = 'ypxmmwshavsppnkn'
+
+RECAPTCHA_PUBLIC_KEY = "6LdYbRQoAAAAAFIVGUeyv8_bwR3RdcYYmKMt2_2Z"
+RECAPTCHA_PRIVATE_KEY = "6LdYbRQoAAAAAI2uTR6YmILBrRWPEvrV9A0GCE0f"
+
+NOCAPTCHA = True
 
 # AUDITLOG_EXCLUDE_TRACKING_FIELDS = (
 #     "last_update",
