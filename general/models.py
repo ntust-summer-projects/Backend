@@ -2,7 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-import django.utils.timezone as timezone
+import django.utils.timezone as timezone, datetime
+from django.conf import settings
  
 class User(AbstractUser):
     class Role(models.TextChoices):
@@ -55,6 +56,20 @@ class Announcement(models.Model):
     isImportment = models.BooleanField(default = False)
 
 class FindPasswordRecord(models.Model):
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    user = models.ForeignKey(User,on_delete=models.CASCADE, unique=True)
     token = models.CharField(max_length=255)
     isExpiried = models.BooleanField(default=False)
+    updateTime = models.DateTimeField(
+        auto_now = True
+    )
+    
+    def checkExpire(self):
+        if self.isExpiried:
+            isExpiried = True
+        else:
+            now = datetime.datetime.utcnow().replace(tzinfo = settings.TIME_ZONE)
+            timediff = now - self.updateTime
+            isExpiried = timediff.total_seconds >= 3600
+            self.isExpiried = isExpiried
+            self.save(force_update=True)
+        return isExpiried
