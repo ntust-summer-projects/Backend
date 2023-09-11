@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from general.models import User, Profile, Announcement
 from rest_framework.exceptions import ValidationError
-from rest_framework_recaptcha import ReCaptchaField
+from django.conf import settings
+import requests
 
 
 
@@ -121,11 +122,29 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return data
     
 class LoginSerializer(serializers.ModelSerializer):
-    recaptcha = ReCaptchaField()
-    
+    recaptcha_response = serializers.CharField(write_only=True)   
     class Meta:
         model = User
         fields = ['username','password']
+
+    def validate_recaptcha_response(self, recaptcha_response):
+        secret_key = settings.RECAPTCHA_PRIVATE_KEY
+
+        # 使用reCAPTCHA的驗證URL驗證
+        response = requests.post(
+            'https://www.google.com/recaptcha/api/siteverify',
+            data={
+                'secret': secret_key,
+                'response': recaptcha_response,
+            }
+        )
+
+        result = response.json()
+
+        if not result['success']:
+            raise serializers.ValidationError('reCAPTCHA validation failed.')
+
+        return recaptcha_response
         
 class LogoutSerializer(serializers.ModelSerializer):
     class Meta:
