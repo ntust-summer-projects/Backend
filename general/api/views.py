@@ -167,12 +167,12 @@ class PasswordForgot(viewsets.GenericViewSet, mixins.CreateModelMixin):
         tokenGenerator = PasswordResetTokenGenerator()
         token = tokenGenerator.make_token(user)
         
-        FindPasswordRecord.objects.update_or_create({ 'token': token, 'isExpiried': False }, user=user)
+        FindPasswordRecord.objects.create(user=user,token=token)
         # FindPasswordRecord.save()
 
         url = f"http://{request.get_host()}/api/reset-password/{token}/"
 
-        sendEmail(email,url)
+        SendEmail(email,url)
 
         response = Response()
         response.data = {
@@ -190,7 +190,7 @@ class PasswordForgot(viewsets.GenericViewSet, mixins.CreateModelMixin):
         except:
             return Response({'message': 'Invalid token'})
         
-        if instance.checkExpire:
+        if instance.isExpiried:
             return Response({'message': 'token expiried'})
         
         user = instance.user
@@ -204,7 +204,7 @@ class PasswordForgot(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
 
 
-def sendEmail(receiver,url):
+def SendEmail(receiver,url):
     content = MIMEMultipart() 
     content["subject"] = "Reset your password"  
     content["from"] = settings.EMAIL_HOST_USER  

@@ -4,8 +4,6 @@ from rest_framework.exceptions import ValidationError
 from django.conf import settings
 import requests
 
-
-
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
@@ -123,6 +121,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
     
 class LoginSerializer(serializers.ModelSerializer):
     recaptcha_response = serializers.CharField(write_only=True)   
+
     class Meta:
         model = User
         fields = ['username','password']
