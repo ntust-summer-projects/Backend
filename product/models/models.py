@@ -39,6 +39,8 @@ class Product(models.Model):
     carbonEmission = models.FloatField(editable = False, default = 0.0)
     last_update = models.DateTimeField(editable = False, auto_now_add=True)
     weight = models.FloatField(default = 0)
+    isTerminated = models.BooleanField(default = 0)
+    image = models.ImageField(upload_to='images/',blank=True,null=True)
     
     def getEmission(self):
         emission = 0.0
