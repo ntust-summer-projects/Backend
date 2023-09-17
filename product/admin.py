@@ -3,15 +3,15 @@ from product.models import *
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id','name','number','carbonEmission','company', 'last_update')
+    list_display = ('id','name','number','carbonEmission', 'weight', 'company', 'last_update')
     
 @admin.register(Component)
 class ComponentAdmin(admin.ModelAdmin):
-    list_display = ('id','product','material','weight','carbonEmission')
+    list_display = ('id','product','material','quantity','carbonEmission')
 
 @admin.register(Material)
 class MaterialAdmin(admin.ModelAdmin):
-    list_display = ('name','carbonEmission')
+    list_display = ('name','carbonEmission', 'unit')
     
 @admin.register(Transportation)
 class TransportationAdmin(admin.ModelAdmin):

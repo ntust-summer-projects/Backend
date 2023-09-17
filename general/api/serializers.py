@@ -16,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(many=True, source='get_profile')
     class Meta:
         model = User
-        fields = ('id', 'username', 'profile', 'last_login', 'role', 'date_joined')
+        fields = ('id', 'username', 'profile', 'last_login', 'role', 'date_joined', 'email')
         depth = 1
     
     def create(self, validated_data):
@@ -26,14 +26,37 @@ class UserSerializer(serializers.ModelSerializer):
             item['user'] = user
             Profile.objects.create(**item)
         return user
-        
+    
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop('get_profile')
+        original_profile = Profile.objects.filter(user=instance.id)
+        if validated_data.pop('username', False) != instance.username:
+            raise ValidationError("username should not be changed")
+        for item in profile_data:
+            key = item['meta_key']
+            profile = original_profile.filter(meta_key=key)
+            try:
+                profile[0]
+            except:
+                raise ValidationError(f'Invalid profile key "{key}"')
+            profile.update(meta_value=item['meta_value'])
+        password = validated_data.pop('password', None)
+        if password is not None:
+            instance.set_password(password)
+        return super().update(instance, validated_data)
+    
     def to_internal_value(self, data):
         profile_data = data.pop('profile')
         data['profile'] = [{'meta_key': key, 'meta_value':value} for key, value in profile_data.items()]
-        return super().to_internal_value(data)
+        validated_data = super().to_internal_value(data)
+        password = data.pop('password', None)
+        if password is not None:
+            validated_data['password'] = password
+        return validated_data
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        data.pop('password', None)
         profiles = data.pop('profile')
         temp = {}
         for profile in profiles:
@@ -50,7 +73,7 @@ class AnnouncementSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class RegistrationSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer(many=True)
+    profile = ProfileSerializer(many=True, required=False)
     class Meta:
         model = User
         fields = ['username','password','email','role', 'profile']
@@ -68,27 +91,30 @@ class RegistrationSerializer(serializers.ModelSerializer):
             user.set_password(password)
         user.save()
         
-        profile_data = validated_data.pop('profile')
-        for item in profile_data:
-            item['user'] = user
-            Profile.objects.create(**item)
+        profile_data = validated_data.pop('profile', None)
+        if profile_data is not None:
+            for item in profile_data:
+                item['user'] = user
+                Profile.objects.create(**item)
         return user
     
     
     def to_internal_value(self, data):
-        profile_data = data.pop('profile')
-        data['profile'] = [{'meta_key': key, 'meta_value':value} for key, value in profile_data.items()]
+        profile_data = data.pop('profile', None)
+        if profile_data is not None:
+            data['profile'] = [{'meta_key': key, 'meta_value':value} for key, value in profile_data.items()]
         return super().to_internal_value(data)
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        profiles = data.pop('profile')
-        temp = {}
-        for profile in profiles:
-            key = profile['meta_key']
-            value = profile['meta_value']
-            temp[key] = value
-        data['profile'] = temp
+        profiles = data.pop('profile', None)
+        if profiles is not None:
+            temp = {}
+            for profile in profiles:
+                key = profile['meta_key']
+                value = profile['meta_value']
+                temp[key] = value
+            data['profile'] = temp
         return data
     
 class LoginSerializer(serializers.ModelSerializer):
@@ -100,7 +126,7 @@ class LogoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         
-class PasswordForgorSerializer(serializers.ModelSerializer):
+class PasswordForgotSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username','email']

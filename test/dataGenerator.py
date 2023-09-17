@@ -94,11 +94,11 @@ def createTag():
 
 def createProduct():
     try:
-        product = Product.objects.create(company = random.choice(User.objects.all().filter(role = User.Role.COMPANY)), name = getRandomProductName(), number = getRandomStr())
+        product = Product.objects.create(company = random.choice(User.objects.all().filter(role = User.Role.COMPANY)), name = getRandomProductName(), number = getRandomStr(), weight = random.uniform(0.1, 1000))
         
         for i in range(random.randint(1,10)):
             try:
-                Component.objects.create(product = product, material = random.choice(Material.objects.all()), weight = random.uniform(0.1, 1000))
+                Component.objects.create(product = product, material = random.choice(Material.objects.all()), quantity = random.uniform(0.1, 10))
             except Exception as e:
                 print(f"Material error: { e }")
                 pass

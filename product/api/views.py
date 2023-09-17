@@ -6,14 +6,20 @@ from .serializers import *
 from ..models import *
 
 
-
 @readonlyproduct_viewset_doc_list
 @readonlyproduct_viewset_doc_retrieve
 class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet): 
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    
-    def get_queryset(self):
+        
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         search = self.request.GET.get('search', None)
         try:
             offset = int(self.request.GET.get('offset', 0))
@@ -26,20 +32,26 @@ class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet):
         tags = self.request.query_params.getlist('tags', None)
         
         queryset = super().get_queryset()
-        
-        if len(tags) == 1:
-            tags = tags[0].split(',')
-        for tag in tags:
-            try:
-                tag_id = Tag.objects.filter(name=tag)[0]
-            except IndexError:
-                raise ValidationError(f"Invalid tag name {tag}")
-            queryset = queryset.filter(tag=tag_id)
+        if tags is not None:
+            if len(tags) == 1:
+                tags = tags[0].split(',')
+            for tag in tags:
+                try:
+                    tag_id = Tag.objects.filter(name=tag)[0]
+                except IndexError:
+                    raise ValidationError(f"Invalid tag name {tag}")
+                queryset = queryset.filter(tag=tag_id)
                 
         if search is not None:
             queryset = queryset.filter(name__contains=search)
-        return queryset[offset: offset+size]
-    
+        
+        queryset = queryset[offset: offset+size]
+        serializer = self.get_serializer(queryset, many=True)
+        
+        for data in serializer.data:
+            data.pop("logs", None)    
+        
+        return Response(serializer.data)
         
 @companyproduct_viewset_doc_list
 @companyproduct_viewset_doc_create
@@ -49,13 +61,21 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     
+    def get_queryset(self):
+        return super().get_queryset().filter(company=self.request.user.id)
+    
     def create(self, request, *args, **kwargs):
         request.data['company'] = request.user.id
         return super().create(request, *args, **kwargs)
     
-    def get_queryset(self):
-        queryset = super().get_queryset().filter(company=self.request.user.id)
-    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         search = self.request.GET.get('search', None)
         try:
             offset = int(self.request.GET.get('offset', 0))
@@ -67,23 +87,45 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
             raise ValidationError({"size":'must be integer'})
         tags = self.request.query_params.getlist('tags', None)
         
-        if len(tags) == 1:
-            tags = tags[0].split(',')
-        for tag in tags:
-            try:
-                tag_id = Tag.objects.filter(name=tag)[0]
-            except IndexError:
-                raise ValidationError(f"Invalid tag name {tag}")
-            queryset = queryset.filter(tag=tag_id)
+        if tags is not None:
+            if len(tags) == 1:
+                tags = tags[0].split(',')
+            for tag in tags:
+                try:
+                    tag_id = Tag.objects.filter(name=tag)[0]
+                except IndexError:
+                    raise ValidationError(f"Invalid tag name {tag}")
+                queryset = queryset.filter(tag=tag_id)
                 
         if search is not None:
             queryset = queryset.filter(name__contains=search)
-        return queryset[offset: offset+size]
+        
+        queryset = queryset[offset: offset+size]
+        serializer = self.get_serializer(queryset, many=True)
+        
+        for data in serializer.data:
+            data.pop("logs", None)   
+            
+        return Response(serializer.data)
     
     @swagger_auto_schema(auto_schema=None)
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
-
+    
+    @action(detail=False, methods=['get'])
+    def deleted(self, request):
+        queryset = LogEntry.objects.filter(content_type = ContentType.objects.get_for_model(Product)).filter(Q(action=2))
+        
+        
+        serializer = ProductLogSerializer(queryset, many=True)
+        temp = []
+        for data in serializer.data:
+            changes = json.loads(data['changes'])
+            if changes['company'][0] == request.user.username:
+                temp.append(data)
+        
+        return Response(temp)
+    
 @material_viewset_doc_list
 class MaterialViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Material.objects.all()
@@ -155,7 +197,7 @@ class LogTypeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return AbstractLog.objects.filter(logtype=self.kwargs['log_type_pk'])
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 

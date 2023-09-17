@@ -183,16 +183,21 @@ product_request_body = openapi.Schema(
         ),
         'components': openapi.Schema(
             type=openapi.TYPE_ARRAY,
-            description='Array of the materials and weight of this product',
+            description='Array of the materials and quantity of this product',
             items=openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
                     'material_id': openapi.Schema(type=openapi.TYPE_INTEGER),
-                    'weight': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT),
+                    'quantity': openapi.Schema(type=openapi.TYPE_NUMBER, format=openapi.FORMAT_FLOAT),
                 },
             ),
-            examples={'material_id':3, 'weight':38.2}
-        )
+            examples={'material_id':3, 'quantity':38.2}
+        ),
+        'weight': openapi.Schema(
+            type=openapi.TYPE_NUMBER,
+            format=openapi.FORMAT_FLOAT,
+            description="Product's total weight.(kg)"
+        ),
     }
 )
 

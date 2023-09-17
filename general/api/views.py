@@ -1,11 +1,11 @@
 from rest_framework import viewsets, status, mixins, views
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
+from rest_framework.decorators import action, api_view
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from .serializers import UserSerializer, AnnouncementSerializer,RegistrationSerializer,LoginSerializer,PasswordForgorSerializer
+from .serializers import *
 from ..models import User, Announcement, FindPasswordRecord
 from product.models import *
 from product.api.serializers import *
@@ -41,6 +41,26 @@ class UserViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset[0], many=False)
         return Response(serializer.data)
+
+
+@user_update_doc
+@api_view(['PUT'])
+def user_update(request):
+    instance = request.user
+    
+    if instance.id is None:
+        raise ValidationError("You need login first")
+    
+    serializer = UserSerializer(instance, data=request.data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    if getattr(instance, '_prefetched_objects_cache', None):
+        # If 'prefetch_related' has been applied to a queryset, we need to
+        # forcibly invalidate the prefetch cache on the instance.
+        instance._prefetched_objects_cache = {}
+
+    return Response(serializer.data)
     
 # TODO: profile amount
 class UserLogViewSet(viewsets.ModelViewSet):
@@ -62,11 +82,13 @@ class RegisterViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     authentication_classes = ()
     
     def create(self,request,*args,**kwargs):
-        role = request.data.pop("role", None)
+        role = request.data.get("role", None)
         if role not in ['COMPANY', "NORMAL"]:
             raise ValidationError("Invalid Role")
         profiles = request.data.get('profile', None)
         if role == "COMPANY":
+            if profiles is None:
+                raise ValidationError("Profile is required")
             required_profiles = ['companyName', 'address', 'phone', 'vatNumber', 'chairman', 'contactPerson', 'contact1']
             for p in required_profiles:
                 if profiles.get(p, None) is None:
@@ -122,18 +144,21 @@ class LogoutViewset(views.APIView):
         
         return response
 
-class PasswordForgor(viewsets.GenericViewSet,mixins.CreateModelMixin):
+@passwordforgot_vieswet_create_doc
+@passwordforgot_vieswet_reset_doc
+class PasswordForgot(viewsets.GenericViewSet, mixins.CreateModelMixin):
     queryset = User.objects.all()
-    serializer_class = PasswordForgorSerializer
-
+    serializer_class = PasswordForgotSerializer
+    permission_classes = ()
+    authentication_classes = ()
+    
     def create(self,request):
 
         username = request.data['username']
         email = request.data['email']
-
-        user = User.objects.get(username=username)
-
-        if user is None:
+        try:
+            user = User.objects.get(username=username)
+        except:
             return Response('User not found!',status=status.HTTP_400_BAD_REQUEST)
         
         if not user.email == email:
@@ -143,9 +168,9 @@ class PasswordForgor(viewsets.GenericViewSet,mixins.CreateModelMixin):
         token = tokenGenerator.make_token(user)
         
         FindPasswordRecord.objects.create(user=user,token=token)
-        FindPasswordRecord.save()
+        # FindPasswordRecord.save()
 
-        url = f"http://localhost:8080/reset-password?token={token}"
+        url = f"http://{request.get_host()}/api/reset-password/{token}/"
 
         SendEmail(email,url)
 
@@ -156,11 +181,14 @@ class PasswordForgor(viewsets.GenericViewSet,mixins.CreateModelMixin):
         }
         return response
 
-    def partial_update(self,request):
-
-        new_password = request.data[new_password]
-        token = request.data[token]
-        instance = FindPasswordRecord.objects.get(token=token)
+    @action(detail=False, methods=['post'], url_path="(?P<token>[^/.]+)")
+    def reset_with_token(self, request, token=None):
+        new_password = request.data['new_password']
+        
+        try:
+            instance = FindPasswordRecord.objects.get(token=token)
+        except:
+            return Response({'message': 'Invalid token'})
         
         if instance.isExpiried:
             return Response({'message': 'token expiried'})
@@ -182,7 +210,7 @@ def SendEmail(receiver,url):
     content["from"] = settings.EMAIL_HOST_USER  
     content["to"] = receiver 
     
-    template = Template(Path("/test/templates/email.html").read_text())
+    template = Template(Path("test/templates/email.html").read_text())
     context = Context({'verifyUrl': url})
     body = template.render(context)
     content.attach(MIMEText(body, 'html'))  

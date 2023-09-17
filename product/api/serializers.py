@@ -26,8 +26,8 @@ class ComponentSerializer(serializers.ModelSerializer):
 class ProductLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = LogEntry
-        # fields = '__all__'
-        exclude = ('additional_data', 'content_type')
+        fields = ('id', 'changes', 'timestamp', 'action')
+        # exclude = ('additional_data', 'content_type')
         depth = 0
         
     def to_representation(self, instance):
@@ -35,10 +35,8 @@ class ProductLogSerializer(serializers.ModelSerializer):
         action_id = data.pop('action')
         action_dict = ['CREATE', 'UPDATE', 'DELETE', 'ACCESS']
         data['action'] = action_dict[action_id]
+        
         return data
-    
-    def to_internal_value(self, data):
-        return super().to_internal_value(data)
         
     
 
@@ -78,16 +76,16 @@ class ProductSerializer(serializers.ModelSerializer):
             oringinal_components = Component.objects.filter(product_id=instance.id)
             om_ids = [oc.material_id for oc in oringinal_components]
             for component in components:
-                weight, material_id = component.get('weight', None), component.get('material_id', None)
-                if weight is None or material_id is None:
-                    raise ValidationError("You need provide both material_id and weight")
+                quantity, material_id = component.get('quantity', None), component.get('material_id', None)
+                if quantity is None or material_id is None:
+                    raise ValidationError("You need provide both material_id and quantity")
                 try:
                     Material.objects.get(id=material_id)
                 except:
                     raise ValidationError(f"Invalid material id={material_id}")
                 if material_id in om_ids:
                     obj = Component.objects.get(product_id=instance.id, material_id=material_id)
-                    obj.weight = weight
+                    obj.quantity = quantity
                     obj.save()
                     om_ids.remove(material_id)
                 else:

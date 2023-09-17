@@ -29,3 +29,6 @@ services:
       DB_PASS: password
       DB_HOST: db
       DB_PORT: 3306
+      DJANGO_SUPERUSER_USERNAME: root
+      DJANGO_SUPERUSER_PASSWORD: password
+      DJANGO_SUPERUSER_EMAIL: root@localhost
