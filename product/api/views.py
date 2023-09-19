@@ -112,6 +112,7 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
     
+    @swagger_auto_schema(deprecated=True)
     @action(detail=False, methods=['get'])
     def deleted(self, request):
         queryset = LogEntry.objects.filter(content_type = ContentType.objects.get_for_model(Product)).filter(Q(action=2))
@@ -125,6 +126,12 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
                 temp.append(data)
         
         return Response(temp)
+    
+    @action(detail=False, methods=['get'])
+    def deactivated(self, request):
+        queryset = self.get_queryset().filter(isActivated=False);
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
     
 @material_viewset_doc_list
 class MaterialViewSet(viewsets.ReadOnlyModelViewSet):
