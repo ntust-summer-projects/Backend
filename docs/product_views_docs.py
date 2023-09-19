@@ -198,6 +198,13 @@ product_request_body = openapi.Schema(
             format=openapi.FORMAT_FLOAT,
             description="Product's total weight.(kg)"
         ),
+        'isActivated': openapi.Schema(
+            type=openapi.TYPE_BOOLEAN
+        ),
+        'image': openapi.Schema(
+            description='Image',
+            type=openapi.TYPE_FILE
+        ),
     }
 )
 

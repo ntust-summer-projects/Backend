@@ -45,27 +45,28 @@ class ProductSerializer(serializers.ModelSerializer):
     logs = ProductLogSerializer(many=True, source='get_log', required=False, read_only=True)
     
     # materials = MaterialSerializer(many=True)
-    components = ComponentSerializer(many=True, source='get_component')
+    components = ComponentSerializer(many=True, source='get_component', required=False)
     class Meta:
         model = Product
         exclude = ('materials', )
         
     def create(self, validated_data):
-        components = validated_data.pop('get_component')
+        components = validated_data.pop('get_component', None)
         
         product = super().create(validated_data)
         materials_id = []
-        for component in components:
-            material_id = component['material_id']
-            try:
-                Material.objects.get(id=material_id)
-            except:
-                raise ValidationError(f"Invalid Material ID {material_id}")
-            if material_id in materials_id:
-                raise ValidationError("You can't have components with the same material id.")
-            materials_id.append(material_id)
-            component['product_id'] = product.id
-            Component.objects.create(**component)
+        if components is not None:
+            for component in components:
+                material_id = component['material_id']
+                try:
+                    Material.objects.get(id=material_id)
+                except:
+                    raise ValidationError(f"Invalid Material ID {material_id}")
+                if material_id in materials_id:
+                    raise ValidationError("You can't have components with the same material id.")
+                materials_id.append(material_id)
+                component['product_id'] = product.id
+                Component.objects.create(**component)
         return product
         
     def update(self, instance, validated_data):
@@ -111,16 +112,17 @@ class ProductSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         tags_string = data.pop('tags', None)
         tags_id = []
-        for tag in tags_string:
-            # try:
-            #     id = Tag.objects.filter(name=tag)[0].id
-            #     tags_id.append(id)
-            # except:
-            #     raise ValidationError({"tags": f'Invalid tag name "{tag}"'})
-            id = Tag.objects.get_or_create(name=tag)[0].id
-            tags_id.append(id)
-        
-        data['tag'] = tags_id
+        if tags_string is not None:
+            for tag in tags_string:
+                # try:
+                #     id = Tag.objects.filter(name=tag)[0].id
+                #     tags_id.append(id)
+                # except:
+                #     raise ValidationError({"tags": f'Invalid tag name "{tag}"'})
+                id = Tag.objects.get_or_create(name=tag)[0].id
+                tags_id.append(id)
+            
+            data['tag'] = tags_id
         return super().to_internal_value(data)
         
 class LogSerializer(serializers.ModelSerializer):
