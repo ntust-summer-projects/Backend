@@ -9,7 +9,7 @@ from ..models import *
 @readonlyproduct_viewset_doc_list
 @readonlyproduct_viewset_doc_retrieve
 class ReadOnlyProductViewSet(viewsets.ReadOnlyModelViewSet): 
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().filter(isActivated=True);
     serializer_class = ProductSerializer
         
     def list(self, request, *args, **kwargs):
@@ -69,7 +69,7 @@ class ProductViewSet(viewsets.ModelViewSet): # TODO: add index and amount
         return super().create(request, *args, **kwargs)
     
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_queryset(self.get_queryset().filter(isActivated=True))
 
         page = self.paginate_queryset(queryset)
         if page is not None:
