@@ -10,7 +10,7 @@ from ..models import User, Announcement, FindPasswordRecord
 from product.models import *
 from product.api.serializers import *
 from docs.general_views_docs import *
-
+from django.views.decorators.csrf import csrf_exempt
 
 import smtplib
 from django.conf import settings
@@ -107,8 +107,29 @@ class LoginViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     serializer_class = LoginSerializer
     permission_classes = ()
     authentication_classes = ()
-    
+        
+    @csrf_exempt 
     def create(self, request):
+        try:
+            data = json.loads(request.body)
+            url = "https://www.google.com/recaptcha/api/siteverify"
+            params = {
+                'secret': settings.RECAPTCHA_PRIVATE_KEY,
+                'response': data["token"],
+            }
+            verify_rs = requests.get(url, params=params, verify=True).json()
+            is_success = verify_rs.get("success", False)
+            
+            if not is_success:
+                response_data = {'message': 'Request processed failed!'}
+                return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+        except json.JSONDecodeError as e:
+            error_response = {
+                'error_message': 'Invalid JSON format in request body',
+                'error_details': str(e)
+            }
+            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
+        
         username = request.data['username']
         password = request.data['password']
     

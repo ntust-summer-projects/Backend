@@ -118,9 +118,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return data
     
 class LoginSerializer(serializers.ModelSerializer):
+    token = serializers.CharField(required=True)
+    
     class Meta:
         model = User
-        fields = ['username','password']
+        fields = ['username','password', 'token']
         
 class LogoutSerializer(serializers.ModelSerializer):
     class Meta:
