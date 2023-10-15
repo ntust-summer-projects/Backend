@@ -173,7 +173,27 @@ class PasswordForgot(viewsets.GenericViewSet, mixins.CreateModelMixin):
     permission_classes = ()
     authentication_classes = ()
     
+    @csrf_exempt 
     def create(self,request):
+        try:
+            data = json.loads(request.body)
+            url = "https://www.google.com/recaptcha/api/siteverify"
+            params = {
+                'secret': settings.RECAPTCHA_PRIVATE_KEY,
+                'response': data["token"],
+            }
+            verify_rs = requests.get(url, params=params, verify=True).json()
+            is_success = verify_rs.get("success", False)
+            
+            if not is_success:
+                response_data = {'message': 'Request processed failed!'}
+                return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+        except json.JSONDecodeError as e:
+            error_response = {
+                'error_message': 'Invalid JSON format in request body',
+                'error_details': str(e)
+            }
+            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
         username = request.data['username']
         email = request.data['email']
@@ -204,6 +224,25 @@ class PasswordForgot(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
     @action(detail=False, methods=['post'], url_path="(?P<token>[^/.]+)")
     def reset_with_token(self, request, token=None):
+        try:
+            data = json.loads(request.body)
+            url = "https://www.google.com/recaptcha/api/siteverify"
+            params = {
+                'secret': settings.RECAPTCHA_PRIVATE_KEY,
+                'response': data["token"],
+            }
+            verify_rs = requests.get(url, params=params, verify=True).json()
+            is_success = verify_rs.get("success", False)
+            
+            if not is_success:
+                response_data = {'message': 'Request processed failed!'}
+                return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+        except json.JSONDecodeError as e:
+            error_response = {
+                'error_message': 'Invalid JSON format in request body',
+                'error_details': str(e)
+            }
+            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
         new_password = request.data['new_password']
         
         try:

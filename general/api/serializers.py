@@ -129,6 +129,8 @@ class LogoutSerializer(serializers.ModelSerializer):
         model = User
         
 class PasswordForgotSerializer(serializers.ModelSerializer):
+    token = serializers.CharField(required=True)
+    
     class Meta:
         model = User
         fields = ['username','email']
